@@ -6,7 +6,6 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
 
-# импортируем все стратегии
 from strategies import (
     UniformStrategy, SierpinskiStrategy, ClustersStrategy,
     IsingStrategy, CorrelatedFieldStrategy, LangevinStrategy,
