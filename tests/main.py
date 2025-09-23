@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget,
-    QPushButton, QComboBox, QLabel
+    QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
+    QPushButton, QComboBox, QLabel, QTextEdit
 )
+from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,23 +14,35 @@ from strategies import (
     PythagorasTreeStrategy
 )
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Генерация точек")
 
-        # --- GUI: панель с кнопками и комбобоксами ---
+        # Устанавливаем размер окна почти на весь экран
+        screen = QApplication.primaryScreen().geometry()
+        window_size = min(screen.width() - 100, screen.height() - 100)
+        self.resize(screen.width(), screen.height() - 100)
+
+        # Фиксируем размер окна
+        self.setFixedSize(screen.width(), screen.height() - 100)
+
+        # --- GUI: горизонтальная компоновка ---
         central = QWidget(self)
         self.setCentralWidget(central)
-        layout = QVBoxLayout(central)
+        main_layout = QHBoxLayout(central)
+
+        # Левая панель с элементами управления
+        left_panel = QWidget()
+        left_panel.setFixedWidth(300)
+        left_layout = QVBoxLayout(left_panel)
 
         # выбор уровня сложности
         self.diff_label = QLabel("Уровень сложности:")
         self.diff_combo = QComboBox()
         self.diff_combo.addItems(["Лёгкий", "Средний", "Сложный"])
-        layout.addWidget(self.diff_label)
-        layout.addWidget(self.diff_combo)
+        left_layout.addWidget(self.diff_label)
+        left_layout.addWidget(self.diff_combo)
 
         # выбор стратегии
         self.strategy_label = QLabel("Стратегия:")
@@ -44,20 +57,30 @@ class MainWindow(QMainWindow):
             "Дерево Пифагора",
             "Снежинка Коха",
             "Папоротник Барнсли",
-            "Множество Жюлиа"
+            "Множество Жюлиа",
+            "Случайный"
         ])
-        layout.addWidget(self.strategy_label)
-        layout.addWidget(self.strategy_combo)
+
+        left_layout.addWidget(self.strategy_label)
+        left_layout.addWidget(self.strategy_combo)
 
         # кнопка генерации
         self.gen_button = QPushButton("Сгенерировать")
         self.gen_button.clicked.connect(self.generate_points)
-        layout.addWidget(self.gen_button)
+        left_layout.addWidget(self.gen_button)
 
-        # вставляем график matplotlib
-        self.figure, self.ax = plt.subplots()
+        # Добавляем растягивающийся элемент чтобы кнопки были сверху
+        left_layout.addStretch()
+
+        # Правая панель - график matplotlib с квадратными размерами
+        plot_size = window_size - 320  # оставляем место для левой панели
+        self.figure, self.ax = plt.subplots(figsize=(plot_size/100, plot_size/100))
         self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
+        self.canvas.setFixedSize(plot_size, plot_size)
+
+        # Добавляем панели в основную компоновку
+        main_layout.addWidget(left_panel)
+        main_layout.addWidget(self.canvas)
 
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
@@ -112,13 +135,32 @@ class MainWindow(QMainWindow):
             strat = JuliaSetStrategy(c=-0.7 + 0.27015j, max_iter=200)
             points = strat.generate(n)
 
-        else:
-            points = np.zeros((0, 2))
+        elif strategy_name == "Случайный":
+            if np.random.rand() < 0.5:
+                # простое равномерное распределение
+                strat = UniformStrategy()
+                points = strat.generate(n)
+            else:
+                # список всех остальных стратегий
+                strategies = [
+                    SierpinskiStrategy(),
+                    ClustersStrategy(k=5),
+                    IsingStrategy(grid_size=100, T=2.5, steps=3000),
+                    CorrelatedFieldStrategy(grid_size=150, sigma=5.0),
+                    LangevinStrategy(v=(0.005, 0.0), D=0.002),
+                    PythagorasTreeStrategy(depth=7, jitter=True),
+                    KochSnowflakeStrategy(iterations=4),
+                    BarnsleyFernStrategy(),
+                    JuliaSetStrategy(c=-0.7 + 0.27015j, max_iter=200)
+                ]
+                strat = np.random.choice(strategies)
+                points = strat.generate(n)
 
-        # отрисовка
+        # отрисовка точек на графике
         self.ax.clear()
         self.ax.scatter(points[:, 0], points[:, 1], s=3, color='blue')
         self.ax.set_aspect('equal')
+        self.ax.set_title(f'{strategy_name} ({difficulty}, {n} точек)')
         self.canvas.draw()
 
 
