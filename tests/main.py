@@ -1,8 +1,6 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
-    QPushButton, QComboBox, QLabel, QTextEdit
-)
-from PyQt6.QtCore import Qt
+    QPushButton, QComboBox, QLabel)
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,7 +19,6 @@ class MainWindow(QMainWindow):
 
         # Устанавливаем размер окна почти на весь экран
         screen = QApplication.primaryScreen().geometry()
-        window_size = min(screen.width() - 100, screen.height() - 100)
         self.resize(screen.width(), screen.height() - 100)
 
         # Фиксируем размер окна
@@ -48,6 +45,7 @@ class MainWindow(QMainWindow):
         self.strategy_label = QLabel("Стратегия:")
         self.strategy_combo = QComboBox()
         self.strategy_combo.addItems([
+            "Случайный",
             "Равномерная",
             "Серпинского",
             "Кластеризация",
@@ -57,8 +55,7 @@ class MainWindow(QMainWindow):
             "Дерево Пифагора",
             "Снежинка Коха",
             "Папоротник Барнсли",
-            "Множество Жюлиа",
-            "Случайный"
+            "Множество Жюлиа"
         ])
 
         left_layout.addWidget(self.strategy_label)
@@ -73,10 +70,16 @@ class MainWindow(QMainWindow):
         left_layout.addStretch()
 
         # Правая панель - график matplotlib с квадратными размерами
-        plot_size = window_size - 320  # оставляем место для левой панели
-        self.figure, self.ax = plt.subplots(figsize=(plot_size/100, plot_size/100))
+        plot_size = 600  # фиксированный размер для всех стратегий
+        self.figure, self.ax = plt.subplots(figsize=(6, 6))
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setFixedSize(plot_size, plot_size)
+
+        # Настройка начального вида графика - убираем оси и рамку
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        for spine in self.ax.spines.values():
+            spine.set_visible(False)
 
         # Добавляем панели в основную компоновку
         main_layout.addWidget(left_panel)
@@ -160,7 +163,17 @@ class MainWindow(QMainWindow):
         self.ax.clear()
         self.ax.scatter(points[:, 0], points[:, 1], s=3, color='blue')
         self.ax.set_aspect('equal')
-        self.ax.set_title(f'{strategy_name} ({difficulty}, {n} точек)')
+
+        # Убираем все элементы кроме точек
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        self.ax.set_xlim(0, 1)
+        self.ax.set_ylim(0, 1)
+
+        # Убираем рамку вокруг графика
+        for spine in self.ax.spines.values():
+            spine.set_visible(False)
+
         self.canvas.draw()
 
 
