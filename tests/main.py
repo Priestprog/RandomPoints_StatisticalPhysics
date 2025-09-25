@@ -70,8 +70,8 @@ class MainWindow(QMainWindow):
         left_layout.addStretch()
 
         # Правая панель - график matplotlib с квадратными размерами
-        plot_size = 600  # фиксированный размер для всех стратегий
-        self.figure, self.ax = plt.subplots(figsize=(6, 6))
+        plot_size = 800  # фиксированный размер для всех стратегий
+        self.figure, self.ax = plt.subplots(figsize=(8, 8))
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setFixedSize(plot_size, plot_size)
 
