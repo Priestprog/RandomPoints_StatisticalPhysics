@@ -19,27 +19,77 @@ class RandomWalkStrategy:
 
 
 class SierpinskiStrategy:
+    def __init__(self):
+        self.vertices = np.array([[0,0], [1,0], [0.5, np.sqrt(3)/2]])
+
     def generate(self, n):
-        vertices = np.array([[0,0], [1,0], [0.5, np.sqrt(3)/2]])
         p = np.random.rand(2)
         points = []
         for _ in range(n):
-            v = vertices[np.random.randint(0, 3)]
+            v = self.vertices[np.random.randint(0, 3)]
             p = (p + v) / 2
             points.append(p.copy())
         return np.array(points)
+
+    def get_correct_visualization(self, ax):
+        ax.clear()
+        # генерируем много точек для лучшей визуализации
+        points = self.generate(10000)
+        ax.scatter(points[:, 0], points[:, 1], s=0.5, color='blue', alpha=0.8)
+
+        # показываем исходные вершины треугольника
+        ax.scatter(self.vertices[:, 0], self.vertices[:, 1], s=100, color='red',
+                  marker='o', edgecolors='black', linewidth=2, label='Вершины')
+
+        # соединяем вершины линиями
+        triangle = np.vstack([self.vertices, self.vertices[0]])
+        ax.plot(triangle[:, 0], triangle[:, 1], 'r--', linewidth=2, alpha=0.7)
+
+        ax.set_title('Треугольник Серпинского', fontsize=12, pad=10)
+        ax.legend()
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
 
 
 class ClustersStrategy:
     def __init__(self, k=5):
         self.k = k
+        self.centers = None
+
     def generate(self, n):
-        centers = np.random.rand(self.k, 2)
+        self.centers = np.random.rand(self.k, 2)
         points = []
-        for c in centers:
+        for c in self.centers:
             cluster = c + 0.05*np.random.randn(n//self.k, 2)
             points.append(cluster)
         return np.vstack(points)
+
+    def get_correct_visualization(self, ax):
+        ax.clear()
+        colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+
+        # генерируем больше точек для лучшей визуализации
+        n = 3000
+        for i, center in enumerate(self.centers):
+            cluster = center + 0.05*np.random.randn(n//self.k, 2)
+            color = colors[i % len(colors)]
+            ax.scatter(cluster[:, 0], cluster[:, 1], s=2, color=color, alpha=0.7, label=f'Кластер {i+1}')
+            # показываем центры кластеров
+            ax.scatter(center[0], center[1], s=50, color='black', marker='x')
+
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
 
 # === Стратегии из статистической физики ===
@@ -54,26 +104,41 @@ class IsingStrategy:
         self.T = T  # температура
         self.J = J  # сила взаимодействия
         self.steps = steps
+        self.spins = None
 
     def generate(self, n):
         N = self.grid_size
-        spins = np.random.choice([-1, 1], size=(N, N))
+        self.spins = np.random.choice([-1, 1], size=(N, N))
         # Метод Метрополиса
         for _ in range(self.steps):
             i, j = np.random.randint(0, N, 2)
-            s = spins[i, j]
-            nb = spins[(i+1)%N,j] + spins[(i-1)%N,j] + spins[i,(j+1)%N] + spins[i,(j-1)%N]
+            s = self.spins[i, j]
+            nb = self.spins[(i+1)%N,j] + self.spins[(i-1)%N,j] + self.spins[i,(j+1)%N] + self.spins[i,(j-1)%N]
             dE = 2 * self.J * s * nb
             if dE < 0 or np.random.rand() < np.exp(-dE/self.T):
-                spins[i,j] *= -1
+                self.spins[i,j] *= -1
         # Берём только "спины вверх"
-        coords = np.argwhere(spins == 1)
+        coords = np.argwhere(self.spins == 1)
         # нормируем в [0,1]^2
         points = coords / N
         if len(points) > n:
             idx = np.random.choice(len(points), n, replace=False)
             return points[idx]
         return points
+
+    def get_correct_visualization(self, ax):
+        ax.clear()
+        if self.spins is not None:
+            # показываем полную решетку спинов
+            ax.imshow(self.spins, cmap='RdBu', origin='lower', extent=[0, 1, 0, 1])
+            ax.set_title(f'Модель Изинга (T={self.T})', fontsize=12, pad=10)
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
 
 
 class CorrelatedFieldStrategy:
@@ -84,18 +149,33 @@ class CorrelatedFieldStrategy:
     def __init__(self, grid_size=200, sigma=5.0):
         self.grid_size = grid_size
         self.sigma = sigma  # радиус корреляции
+        self.corr_field = None
 
     def generate(self, n):
         field = np.random.randn(self.grid_size, self.grid_size)
-        corr_field = gaussian_filter(field, sigma=self.sigma)
+        self.corr_field = gaussian_filter(field, sigma=self.sigma)
         # нормируем
-        corr_field = (corr_field - corr_field.min()) / (corr_field.max()-corr_field.min())
+        self.corr_field = (self.corr_field - self.corr_field.min()) / (self.corr_field.max()-self.corr_field.min())
         # выбираем n случайных точек с вероятностью ∝ значению поля
-        flat = corr_field.ravel()
+        flat = self.corr_field.ravel()
         flat /= flat.sum()
         idx = np.random.choice(len(flat), size=n, p=flat)
-        y, x = np.unravel_index(idx, corr_field.shape)
+        y, x = np.unravel_index(idx, self.corr_field.shape)
         return np.column_stack([x/self.grid_size, y/self.grid_size])
+
+    def get_correct_visualization(self, ax):
+        ax.clear()
+        if self.corr_field is not None:
+            # показываем поле как тепловую карту
+            im = ax.imshow(self.corr_field, cmap='viridis', origin='lower', extent=[0, 1, 0, 1])
+            ax.set_title(f'Коррелированное поле (σ={self.sigma})', fontsize=12, pad=10)
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
 
 
 class LangevinStrategy:
@@ -107,6 +187,7 @@ class LangevinStrategy:
         self.v = np.array(v)
         self.D = D
         self.dt = dt
+        self.trajectory = None
 
     def generate(self, n):
         points = [np.array([0.5, 0.5])]
@@ -115,10 +196,32 @@ class LangevinStrategy:
             noise = np.sqrt(2*self.D*self.dt) * np.random.randn(2)
             new_point = points[-1] + drift + noise
             points.append(new_point)
-        points = np.array(points)
+        self.trajectory = np.array(points)
         # нормируем в [0,1]^2
-        points = np.clip(points, 0, 1)
-        return points
+        self.trajectory = np.clip(self.trajectory, 0, 1)
+        return self.trajectory
+
+    def get_correct_visualization(self, ax):
+        ax.clear()
+        if self.trajectory is not None:
+            # показываем траекторию как линию
+            ax.plot(self.trajectory[:, 0], self.trajectory[:, 1], 'r-', alpha=0.7, linewidth=1)
+            # точки с градиентом цвета по времени
+            colors = np.linspace(0, 1, len(self.trajectory))
+            ax.scatter(self.trajectory[:, 0], self.trajectory[:, 1], c=colors, cmap='plasma', s=3)
+            # начальная точка
+            ax.scatter(self.trajectory[0, 0], self.trajectory[0, 1], c='green', s=50, marker='o', label='Старт')
+            # конечная точка
+            ax.scatter(self.trajectory[-1, 0], self.trajectory[-1, 1], c='red', s=50, marker='s', label='Финиш')
+            ax.set_title(f'Ланжевен (v={self.v}, D={self.D})', fontsize=12, pad=10)
+            ax.legend()
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
 
 
 class PythagorasTreeStrategy:
@@ -185,6 +288,7 @@ class KochSnowflakeStrategy:
     """
     def __init__(self, iterations=4):
         self.iterations = iterations
+        self.full_curve = None
 
     def _koch_curve(self, p1, p2, depth):
         if depth == 0:
@@ -211,11 +315,25 @@ class KochSnowflakeStrategy:
         curve += self._koch_curve(A, B, self.iterations)[:-1]
         curve += self._koch_curve(B, C, self.iterations)[:-1]
         curve += self._koch_curve(C, A, self.iterations)
-        points = np.array(curve)
-        if len(points) > n:
-            idx = np.random.choice(len(points), n, replace=False)
-            return points[idx]
-        return points
+        self.full_curve = np.array(curve)
+        if len(self.full_curve) > n:
+            idx = np.random.choice(len(self.full_curve), n, replace=False)
+            return self.full_curve[idx]
+        return self.full_curve
+
+    def get_correct_visualization(self, ax):
+        ax.clear()
+        if self.full_curve is not None:
+            # показываем непрерывную линию
+            ax.plot(self.full_curve[:, 0], self.full_curve[:, 1], 'b-', linewidth=2)
+            ax.set_title(f'Снежинка Коха (итераций: {self.iterations})', fontsize=12, pad=10)
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
 
 
 class BarnsleyFernStrategy:
