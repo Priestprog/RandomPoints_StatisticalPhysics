@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
             points = strat.generate(n)
 
         elif strategy_name == "Снежинка Коха":
-            strat = KochSnowflakeStrategy(iterations=4)
+            strat = KochSnowflakeStrategy(iterations=5)
             self.current_strategy_name = "Снежинка Коха"
             points = strat.generate(n)
 
@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
             if np.random.rand() < 0.5:
                 # простое равномерное распределение
                 strat = UniformStrategy()
-                self.current_strategy_name = "Равномерная (случайные точки)"
+                self.current_strategy_name = "Случайные точки"
                 points = strat.generate(n)
             else:
                 # список всех остальных стратегий с их названиями
@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
                     (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
                     (LangevinStrategy(v=(0.005, 0.0), D=0.002), "Ланжевен"),
                     (PythagorasTreeStrategy(depth=7, jitter=True), "Дерево Пифагора"),
-                    (KochSnowflakeStrategy(iterations=4), "Снежинка Коха"),
+                    (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
                     (BarnsleyFernStrategy(), "Папоротник Барнсли"),
                     (JuliaSetStrategy(c=-0.7 + 0.27015j, max_iter=200), "Множество Жюлиа")
                 ]
@@ -211,18 +211,23 @@ class MainWindow(QMainWindow):
         if hasattr(self.current_strategy, 'get_correct_visualization'):
             self.current_strategy.get_correct_visualization(self.ax)
         else:
-            # для стратегий без специальной визуализации просто показываем больше точек
-            difficulty = self.diff_combo.currentText()
-            if difficulty == "Лёгкий":
-                n = 40000  # увеличиваем количество точек
-            elif difficulty == "Средний":
-                n = 40000
+            # для равномерных стратегий просто меняем цвет на красный
+            if isinstance(self.current_strategy, UniformStrategy):
+                # просто перекрашиваем существующие точки в красный
+                self.ax.collections[0].set_color('red')
             else:
-                n = 40000
+                # для других стратегий показываем больше точек
+                difficulty = self.diff_combo.currentText()
+                if difficulty == "Лёгкий":
+                    n = 100000  # увеличиваем количество точек
+                elif difficulty == "Средний":
+                    n = 100000
+                else:
+                    n = 100000
 
-            points = self.current_strategy.generate(n)
-            self.ax.clear()
-            self.ax.scatter(points[:, 0], points[:, 1], s=1, color='red', alpha=0.6)
+                points = self.current_strategy.generate(n)
+                self.ax.clear()
+                self.ax.scatter(points[:, 0], points[:, 1], s=1, color='red', alpha=0.6)
             self.ax.set_aspect('equal')
             self.ax.set_xlim(0, 1)
             self.ax.set_ylim(0, 1)
