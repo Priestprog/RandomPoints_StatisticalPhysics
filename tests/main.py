@@ -13,7 +13,7 @@ from strategies import (
 )
 
 # Константа масштабирования размера кнопок
-SCALE = 1.5
+SCALE = 1.7
 
 class AnswerDialog(QDialog):
     def __init__(self, strategy_name, description, scale_factor):
@@ -145,14 +145,14 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.point_size_value_label)
 
         # кнопка генерации
-        self.gen_button = QPushButton("Сгенерировать")
+        self.gen_button = QPushButton("Генерировать")
         self.gen_button.clicked.connect(self.generate_points)
         self.gen_button.setMinimumHeight(int(40 * SCALE))
         self.gen_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(8 * SCALE)}px;")
         left_layout.addWidget(self.gen_button)
 
         # кнопка показа правильного ответа
-        self.answer_button = QPushButton("Узнать правильный ответ")
+        self.answer_button = QPushButton("Ответ")
         self.answer_button.clicked.connect(self.show_correct_answer)
         self.answer_button.setEnabled(False)  # изначально недоступна
         self.answer_button.setMinimumHeight(int(40 * SCALE))
