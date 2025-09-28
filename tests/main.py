@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
             points = strat.generate(n)
 
         elif strategy_name == "Дерево Пифагора":
-            strat = PythagorasTreeStrategy(depth=7)
+            strat = PythagorasTreeStrategy(depth=10)
             self.current_strategy_name = "Дерево Пифагора"
             points = strat.generate(n)
 
