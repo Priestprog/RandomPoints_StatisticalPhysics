@@ -1,16 +1,77 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
-    QPushButton, QComboBox, QLabel)
+    QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider)
+from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import numpy as np
-
 from strategies import (
     UniformStrategy, SierpinskiStrategy, ClustersStrategy,
     IsingStrategy, CorrelatedFieldStrategy, LangevinStrategy,
     KochSnowflakeStrategy, BarnsleyFernStrategy, JuliaSetStrategy,
     PythagorasTreeStrategy
 )
+
+# Константа масштабирования размера кнопок
+SCALE = 1.5
+
+class AnswerDialog(QDialog):
+    def __init__(self, strategy_name, description, scale_factor):
+        super().__init__()
+        self.setWindowTitle("Правильный ответ")
+        self.setModal(True)
+        self.resize(int(600 * scale_factor), int(400 * scale_factor))
+
+        layout = QVBoxLayout(self)
+
+        # Заголовок с названием стратегии
+        title_text = QTextEdit()
+        title_text.setHtml(f'<h2 style="color: #2e7d32; text-align: center;">{strategy_name}</h2>')
+        title_text.setReadOnly(True)
+        title_text.setMaximumHeight(int(80 * scale_factor))
+        title_text.setStyleSheet(f"border: none; background: transparent; font-size: {int(18 * scale_factor)}px;")
+        layout.addWidget(title_text)
+
+        # Описание стратегии
+        description_text = QTextEdit()
+        description_text.setPlainText(description)
+        description_text.setReadOnly(True)
+        description_text.setStyleSheet(f"font-size: {int(14 * scale_factor)}px; padding: {int(10 * scale_factor)}px; border: 1px solid #ccc; border-radius: 5px;")
+        layout.addWidget(description_text)
+
+        # Кнопка закрытия
+        close_button = QPushButton("Закрыть")
+        close_button.clicked.connect(self.accept)
+        close_button.setMinimumHeight(int(40 * scale_factor))
+        close_button.setStyleSheet(f"font-size: {int(14 * scale_factor)}px; padding: {int(8 * scale_factor)}px;")
+        layout.addWidget(close_button)
+
+def get_strategy_description(strategy_name):
+    descriptions = {
+        "Случайные точки": "Простое равномерное распределение случайных точек по всей области. Каждая точка имеет равную вероятность появления в любом месте квадрата.",
+
+        "Равномерная": "Равномерное распределение точек в пространстве. Все области имеют одинаковую вероятность содержать точки.",
+
+        "Треугольник Серпинского": "Классический фрактал, созданный путем рекурсивного удаления центральных треугольников. Характеризуется самоподобием и имеет дробную размерность между 1 и 2.",
+
+        "Кластеризация": "Алгоритм группировки точек в кластеры. Точки формируют отдельные группы (кластеры) с высокой плотностью внутри групп и низкой плотностью между ними.",
+
+        "Изинг": "Модель Изинга из статистической физики, описывающая магнитные свойства материалов. Использует алгоритм Метрополиса для моделирования спиновых систем в состоянии равновесия.",
+
+        "Коррелированное поле": "Пространственно коррелированное случайное поле, созданное с помощью фильтрации гауссова шума. Точки имеют пространственные корреляции и образуют плавные структуры.",
+
+        "Ланжевен": "Динамика Ланжевена - стохастическое дифференциальное уравнение, описывающее броуновское движение частиц с учетом внешних сил и случайного шума.",
+
+        "Дерево Пифагора": "Фрактальная структура, построенная рекурсивно из квадратов, где каждый квадрат порождает два меньших квадрата под углами. Создает древовидную структуру с самоподобными свойствами.",
+
+        "Снежинка Коха": "Классический фрактал, созданный путем итеративного добавления треугольных выступов к сторонам треугольника. Имеет бесконечную длину периметра при конечной площади.",
+
+        "Папоротник Барнсли": "Фрактал, созданный с помощью системы итерированных функций (IFS). Четыре аффинных преобразования создают реалистичное изображение папоротника.",
+
+        "Множество Жюлиа": "Фрактальное множество в комплексной плоскости, определяемое итерацией комплексной функции. Характеризуется сложной границей и самоподобными структурами."
+    }
+
+    return descriptions.get(strategy_name, "Описание недоступно для данной стратегии.")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -38,6 +99,8 @@ class MainWindow(QMainWindow):
         self.diff_label = QLabel("Уровень сложности:")
         self.diff_combo = QComboBox()
         self.diff_combo.addItems(["Лёгкий", "Средний", "Сложный"])
+        self.diff_combo.setMinimumHeight(int(30 * SCALE))
+        self.diff_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(6 * SCALE)}px;")
         left_layout.addWidget(self.diff_label)
         left_layout.addWidget(self.diff_combo)
 
@@ -47,7 +110,7 @@ class MainWindow(QMainWindow):
         self.strategy_combo.addItems([
             "Случайный",
             "Равномерная",
-            "Серпинского",
+            "Треугольник Серпинского",
             "Кластеризация",
             "Изинг",
             "Коррелированное поле",
@@ -57,19 +120,43 @@ class MainWindow(QMainWindow):
             "Папоротник Барнсли",
             "Множество Жюлиа"
         ])
+        self.strategy_combo.setMinimumHeight(int(30 * SCALE))
+        self.strategy_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(6 * SCALE)}px;")
 
         left_layout.addWidget(self.strategy_label)
         left_layout.addWidget(self.strategy_combo)
 
+        # слайдер для размера точек
+        self.point_size_label = QLabel("Размер точек:")
+        self.point_size_slider = QSlider(Qt.Orientation.Horizontal)
+        self.point_size_slider.setMinimum(1)
+        self.point_size_slider.setMaximum(20)
+        self.point_size_slider.setValue(3)  # начальное значение
+        self.point_size_slider.setMinimumHeight(int(25 * SCALE))
+        self.point_size_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
+
+        # метка со значением размера точек
+        self.point_size_value_label = QLabel("3")
+        self.point_size_value_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.point_size_slider.valueChanged.connect(lambda value: self.point_size_value_label.setText(str(value)))
+
+        left_layout.addWidget(self.point_size_label)
+        left_layout.addWidget(self.point_size_slider)
+        left_layout.addWidget(self.point_size_value_label)
+
         # кнопка генерации
         self.gen_button = QPushButton("Сгенерировать")
         self.gen_button.clicked.connect(self.generate_points)
+        self.gen_button.setMinimumHeight(int(40 * SCALE))
+        self.gen_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(8 * SCALE)}px;")
         left_layout.addWidget(self.gen_button)
 
         # кнопка показа правильного ответа
         self.answer_button = QPushButton("Узнать правильный ответ")
         self.answer_button.clicked.connect(self.show_correct_answer)
         self.answer_button.setEnabled(False)  # изначально недоступна
+        self.answer_button.setMinimumHeight(int(40 * SCALE))
+        self.answer_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(8 * SCALE)}px;")
         left_layout.addWidget(self.answer_button)
 
         # метка для названия стратегии
@@ -114,9 +201,9 @@ class MainWindow(QMainWindow):
             self.current_strategy_name = "Равномерная (случайные точки)"
             points = strat.generate(n)
 
-        elif strategy_name == "Серпинского":
+        elif strategy_name == "Треугольник Серпинского":
             strat = SierpinskiStrategy()
-            self.current_strategy_name = "Серпинского"
+            self.current_strategy_name = "Треугольник Серпинского"
             points = strat.generate(n)
 
         elif strategy_name == "Кластеризация":
@@ -168,7 +255,7 @@ class MainWindow(QMainWindow):
             else:
                 # список всех остальных стратегий с их названиями
                 strategies_with_names = [
-                    (SierpinskiStrategy(), "Серпинского"),
+                    (SierpinskiStrategy(), "Треугольник Серпинского"),
                     (ClustersStrategy(k=5), "Кластеризация"),
                     (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
                     (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
@@ -184,7 +271,8 @@ class MainWindow(QMainWindow):
 
         # отрисовка точек на графике
         self.ax.clear()
-        self.ax.scatter(points[:, 0], points[:, 1], s=3, color='blue')
+        point_size = self.point_size_slider.value()
+        self.ax.scatter(points[:, 0], points[:, 1], s=point_size, color='blue')
         self.ax.set_aspect('equal')
 
         # Убираем все элементы кроме точек
@@ -227,7 +315,8 @@ class MainWindow(QMainWindow):
 
                 points = self.current_strategy.generate(n)
                 self.ax.clear()
-                self.ax.scatter(points[:, 0], points[:, 1], s=1, color='red', alpha=0.6)
+                point_size = max(1, self.point_size_slider.value() - 2)  # немного меньше для большого количества точек
+                self.ax.scatter(points[:, 0], points[:, 1], s=point_size, color='red', alpha=0.6)
             self.ax.set_aspect('equal')
             self.ax.set_xlim(0, 1)
             self.ax.set_ylim(0, 1)
@@ -237,6 +326,11 @@ class MainWindow(QMainWindow):
                 spine.set_visible(False)
 
         self.canvas.draw()
+
+        # Открываем диалоговое окно с описанием стратегии
+        description = get_strategy_description(self.current_strategy_name)
+        dialog = AnswerDialog(self.current_strategy_name, description, SCALE)
+        dialog.exec()
 
 
 if __name__ == '__main__':
