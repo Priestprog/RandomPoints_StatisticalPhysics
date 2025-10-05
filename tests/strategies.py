@@ -67,7 +67,10 @@ class ClustersStrategy:
         for c in self.centers:
             cluster = c + 0.05*np.random.randn(n//self.k, 2)
             points.append(cluster)
-        return np.vstack(points)
+        all_points = np.vstack(points)
+        # Перемешиваем точки, чтобы они появлялись в случайном порядке
+        np.random.shuffle(all_points)
+        return all_points
 
     def get_correct_visualization(self, ax):
         ax.clear()
@@ -358,6 +361,8 @@ class BarnsleyFernStrategy:
         # нормализация в [0,1]^2
         points[:,0] = (points[:,0] - points[:,0].min()) / (points[:,0].max()-points[:,0].min())
         points[:,1] = (points[:,1] - points[:,1].min()) / (points[:,1].max()-points[:,1].min())
+        # Перемешиваем точки для случайного порядка появления
+        np.random.shuffle(points)
         return points
 
 
