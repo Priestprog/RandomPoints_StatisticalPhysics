@@ -63,3 +63,7 @@ Thumbs.db
 *.tmp
 *.bak
 *.log
+
+*.png
+*.jpg
+*.jpeg

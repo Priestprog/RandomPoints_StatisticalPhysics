@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
-    QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider)
+    QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider, QStackedWidget)
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QPixmap, QFont
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -161,22 +162,296 @@ def get_strategy_description(strategy_name):
 
     return descriptions.get(strategy_name, "<p>Описание недоступно для данной стратегии.</p>")
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Генерация точек")
 
-        # Устанавливаем размер окна почти на весь экран
-        screen = QApplication.primaryScreen().geometry()
-        self.resize(screen.width(), screen.height() - 100)
+class TitleScreen(QWidget):
+    """Титульный экран с логотипами и кнопками"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
 
-        # Фиксируем размер окна
-        self.setFixedSize(screen.width(), screen.height() - 100)
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(50, 30, 50, 50)
 
+        # Верхняя часть с логотипами
+        top_layout = QHBoxLayout()
+
+        # Левый логотип (ММП)
+        logo_mmp = QLabel()
+        pixmap_mmp = QPixmap(str(Path(__file__).parent / "logo-mgu.png"))
+        if not pixmap_mmp.isNull():
+            logo_mmp.setPixmap(pixmap_mmp.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        logo_mmp.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        top_layout.addWidget(logo_mmp, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+
+        top_layout.addStretch()
+
+        # Правый логотип (копия ММП или другой)
+        logo_right = QLabel()
+        pixmap_right = QPixmap(str(Path(__file__).parent / "logo_mmp.png"))
+        if not pixmap_right.isNull():
+            logo_right.setPixmap(pixmap_right.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        logo_right.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        top_layout.addWidget(logo_right, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+
+        layout.addLayout(top_layout)
+
+        layout.addSpacing(30)
+
+        # Заголовки
+        title1 = QLabel("Московский Государственный Университет\nимени М. В. Ломоносова")
+        title1.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title1.setFont(QFont("Arial", 36, QFont.Weight.Bold))
+        layout.addWidget(title1)
+
+        layout.addSpacing(10)
+
+        title2 = QLabel("Псевдослучайные структуры точек на поверхности")
+        title2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title2.setFont(QFont("Arial", 36))
+        layout.addWidget(title2)
+
+        layout.addSpacing(60)
+
+        # Кнопки с ограниченной шириной
+        button_container = QHBoxLayout()
+        button_container.addStretch()
+
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(20)
+
+        # Кнопка "Модель"
+        self.play_button = QPushButton("Модель")
+        self.play_button.setMinimumHeight(70)
+        self.play_button.setMinimumWidth(400)
+        self.play_button.setStyleSheet("""
+            QPushButton {
+                font-size: 24px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 10px;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        button_layout.addWidget(self.play_button)
+
+        # Кнопка "Авторы"
+        self.authors_button = QPushButton("Авторы")
+        self.authors_button.setMinimumHeight(70)
+        self.authors_button.setMinimumWidth(400)
+        self.authors_button.setStyleSheet("""
+            QPushButton {
+                font-size: 24px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 10px;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        button_layout.addWidget(self.authors_button)
+
+        # Кнопка "Выход"
+        self.exit_button = QPushButton("Выход")
+        self.exit_button.setMinimumHeight(70)
+        self.exit_button.setMinimumWidth(400)
+        self.exit_button.setStyleSheet("""
+            QPushButton {
+                font-size: 24px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 10px;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        button_layout.addWidget(self.exit_button)
+
+        button_container.addLayout(button_layout)
+        button_container.addStretch()
+
+        layout.addLayout(button_container)
+        layout.addStretch()
+
+
+class AuthorsScreen(QWidget):
+    """Экран с информацией об авторах"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(50, 30, 50, 50)
+
+        # Заголовок
+        title = QLabel("Авторы проекта")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setFont(QFont("Arial", 32, QFont.Weight.Bold))
+        layout.addWidget(title)
+
+        layout.addSpacing(50)
+
+        # Контейнер для авторов - фото в ряд
+        authors_photos_layout = QHBoxLayout()
+        authors_photos_layout.addStretch()
+
+        # Автор 1: Багров Александр Михайлович
+        author1_container = QVBoxLayout()
+        author1_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Фото автора 1
+        photo1 = QLabel()
+        photo1_path = Path(__file__).parent / "bagrov.png"
+        if photo1_path.exists():
+            pixmap1 = QPixmap(str(photo1_path))
+            if not pixmap1.isNull():
+                photo1.setPixmap(pixmap1.scaled(300, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        else:
+            photo1.setFixedSize(200, 200)
+            photo1.setStyleSheet("background-color: #ddd; border: 2px solid #999; border-radius: 100px;")
+        photo1.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author1_container.addWidget(photo1)
+
+        author1_container.addSpacing(20)
+
+        # Текст автора 1
+        name1 = QLabel("Багров Александр\nМихайлович")
+        name1.setFont(QFont("Arial", 32, QFont.Weight.Bold))
+        name1.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author1_container.addWidget(name1)
+
+        authors_photos_layout.addLayout(author1_container)
+        authors_photos_layout.addSpacing(80)
+
+        # Автор 2: Лукьянов Артём
+        author2_container = QVBoxLayout()
+        author2_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Фото автора 2
+        photo2 = QLabel()
+        photo2_path = Path(__file__).parent / "lukanov.jpg"
+        if photo2_path.exists():
+            pixmap2 = QPixmap(str(photo2_path))
+            if not pixmap2.isNull():
+                photo2.setPixmap(pixmap2.scaled(300, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        else:
+            photo2.setFixedSize(200, 200)
+            photo2.setStyleSheet("background-color: #ddd; border: 2px solid #999; border-radius: 100px;")
+        photo2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author2_container.addWidget(photo2)
+
+        author2_container.addSpacing(20)
+
+        # Текст автора 2
+        name2 = QLabel("Лукьянов Артём\nузнать отчестово")
+        name2.setFont(QFont("Arial", 32, QFont.Weight.Bold))
+        name2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author2_container.addWidget(name2)
+
+        authors_photos_layout.addLayout(author2_container)
+        authors_photos_layout.addSpacing(80)
+
+        # Автор 3: Чичигина Ольга Александровна
+        author3_container = QVBoxLayout()
+        author3_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Фото автора 3
+        photo3 = QLabel()
+        photo3_path = Path(__file__).parent / "chichigina.jpg"
+        if photo3_path.exists():
+            pixmap3 = QPixmap(str(photo3_path))
+            if not pixmap3.isNull():
+                photo3.setPixmap(pixmap3.scaled(300, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        else:
+            photo3.setFixedSize(200, 200)
+            photo3.setStyleSheet("background-color: #ddd; border: 2px solid #999; border-radius: 100px;")
+        photo3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author3_container.addWidget(photo3)
+
+        author3_container.addSpacing(20)
+
+        # Текст автора 3
+        name3 = QLabel("Чичигина Ольга\nАлександровна")
+        name3.setFont(QFont("Arial", 32, QFont.Weight.Bold))
+        name3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        author3_container.addWidget(name3)
+
+        authors_photos_layout.addLayout(author3_container)
+        authors_photos_layout.addStretch()
+
+        layout.addLayout(authors_photos_layout)
+        layout.addStretch()
+
+        # Кнопка "Назад"
+        self.back_button = QPushButton("← Назад")
+        self.back_button.setMinimumHeight(50)
+        self.back_button.setStyleSheet("""
+            QPushButton {
+                font-size: 18px;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        layout.addWidget(self.back_button)
+
+
+class GameWindow(QWidget):
+    """Игровое окно с генерацией точек"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+        # Переменные для анимации
+        self.animation_timer = QTimer()
+        self.animation_timer.timeout.connect(self._update_animation)
+        self.current_points = None
+        self.animation_index = 0
+        self.animation_step = 1
+        self.is_animating = False
+
+    def init_ui(self):
         # --- GUI: горизонтальная компоновка ---
-        central = QWidget(self)
-        self.setCentralWidget(central)
-        main_layout = QHBoxLayout(central)
+        main_layout = QVBoxLayout(self)
+
+        # Кнопка "Назад" вверху
+        top_layout = QHBoxLayout()
+        self.back_button = QPushButton("← Назад")
+        self.back_button.setMaximumWidth(150)
+        self.back_button.setMinimumHeight(40)
+        self.back_button.setStyleSheet("""
+            QPushButton {
+                font-size: 16px;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 8px;
+                padding: 8px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        top_layout.addWidget(self.back_button)
+        top_layout.addStretch()
+        main_layout.addLayout(top_layout)
+
+        # Основная часть игры
+        game_layout = QHBoxLayout()
 
         # Левая панель с элементами управления
         left_panel = QWidget()
@@ -214,23 +489,47 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.strategy_label)
         left_layout.addWidget(self.strategy_combo)
 
+        # слайдер для скорости анимации (интервал между обновлениями в мс)
+        self.speed_label = QLabel("Скорость анимации: 50 мс")
+        self.speed_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.speed_slider = QSlider(Qt.Orientation.Horizontal)
+        self.speed_slider.setMinimum(10)
+        self.speed_slider.setMaximum(500)
+        self.speed_slider.setValue(50)
+        self.speed_slider.setMinimumHeight(int(25 * SCALE))
+        self.speed_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
+        self.speed_slider.valueChanged.connect(lambda value: self.speed_label.setText(f"Скорость анимации: {value} мс"))
+
+        left_layout.addWidget(self.speed_label)
+        left_layout.addWidget(self.speed_slider)
+
+        # слайдер для количества точек за шаг
+        self.points_per_step_label = QLabel("Точек за шаг: 10")
+        self.points_per_step_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.points_per_step_slider = QSlider(Qt.Orientation.Horizontal)
+        self.points_per_step_slider.setMinimum(1)
+        self.points_per_step_slider.setMaximum(100)
+        self.points_per_step_slider.setValue(10)
+        self.points_per_step_slider.setMinimumHeight(int(25 * SCALE))
+        self.points_per_step_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
+        self.points_per_step_slider.valueChanged.connect(lambda value: self.points_per_step_label.setText(f"Точек за шаг: {value}"))
+
+        left_layout.addWidget(self.points_per_step_label)
+        left_layout.addWidget(self.points_per_step_slider)
+
         # слайдер для размера точек
-        self.point_size_label = QLabel("Размер точек:")
+        self.point_size_label = QLabel("Размер точек: 3")
+        self.point_size_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
         self.point_size_slider = QSlider(Qt.Orientation.Horizontal)
         self.point_size_slider.setMinimum(1)
         self.point_size_slider.setMaximum(20)
-        self.point_size_slider.setValue(3)  # начальное значение
+        self.point_size_slider.setValue(3)
         self.point_size_slider.setMinimumHeight(int(25 * SCALE))
         self.point_size_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
-
-        # метка со значением размера точек
-        self.point_size_value_label = QLabel("3")
-        self.point_size_value_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
-        self.point_size_slider.valueChanged.connect(lambda value: self.point_size_value_label.setText(str(value)))
+        self.point_size_slider.valueChanged.connect(lambda value: self.point_size_label.setText(f"Размер точек: {value}"))
 
         left_layout.addWidget(self.point_size_label)
         left_layout.addWidget(self.point_size_slider)
-        left_layout.addWidget(self.point_size_value_label)
 
         # кнопка генерации
         self.gen_button = QPushButton("Генерировать")
@@ -268,16 +567,10 @@ class MainWindow(QMainWindow):
             spine.set_visible(False)
 
         # Добавляем панели в основную компоновку
-        main_layout.addWidget(left_panel)
-        main_layout.addWidget(self.canvas)
+        game_layout.addWidget(left_panel)
+        game_layout.addWidget(self.canvas)
 
-        # Переменные для анимации
-        self.animation_timer = QTimer()
-        self.animation_timer.timeout.connect(self._update_animation)
-        self.current_points = None
-        self.animation_index = 0
-        self.animation_step = 1
-        self.is_animating = False
+        main_layout.addLayout(game_layout)
 
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
@@ -368,16 +661,10 @@ class MainWindow(QMainWindow):
         # Сохраняем стратегию
         self.current_strategy = strat
 
-        # Настраиваем анимацию в зависимости от сложности
-        if difficulty == "Лёгкий":
-            animation_interval, step = EASY_ANIMATION
-        elif difficulty == "Средний":
-            animation_interval, step = MEDIUM_ANIMATION
-        else:  # Сложный
-            animation_interval, step = HARD_ANIMATION
-
-        # Получаем размер точек из слайдера
-        point_size = self.point_size_slider.value()
+        # Получаем параметры анимации из слайдеров
+        animation_interval = self.speed_slider.value()  # интервал в мс
+        step = self.points_per_step_slider.value()  # количество точек за шаг
+        point_size = self.point_size_slider.value()  # размер точек
 
         # Запускаем анимацию
         self._start_animation(points, point_size, animation_interval, step)
@@ -521,6 +808,51 @@ class MainWindow(QMainWindow):
                 spine.set_visible(False)
 
         self.canvas.draw()
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Генерация точек")
+
+        # Устанавливаем размер окна почти на весь экран
+        screen = QApplication.primaryScreen().geometry()
+        self.resize(screen.width(), screen.height() - 100)
+
+        # Фиксируем размер окна
+        self.setFixedSize(screen.width(), screen.height() - 100)
+
+        # Создаём QStackedWidget для переключения между экранами
+        self.stacked_widget = QStackedWidget()
+        self.setCentralWidget(self.stacked_widget)
+
+        # Создаём экраны
+        self.title_screen = TitleScreen()
+        self.game_screen = GameWindow()
+        self.authors_screen = AuthorsScreen()
+
+        # Добавляем экраны в стек
+        self.stacked_widget.addWidget(self.title_screen)
+        self.stacked_widget.addWidget(self.game_screen)
+        self.stacked_widget.addWidget(self.authors_screen)
+
+        # Подключаем кнопки титульного экрана
+        self.title_screen.play_button.clicked.connect(self.show_game)
+        self.title_screen.authors_button.clicked.connect(self.show_authors)
+        self.title_screen.exit_button.clicked.connect(self.close)
+
+        # Подключаем кнопки "Назад"
+        self.game_screen.back_button.clicked.connect(self.show_title)
+        self.authors_screen.back_button.clicked.connect(self.show_title)
+
+    def show_title(self):
+        self.stacked_widget.setCurrentWidget(self.title_screen)
+
+    def show_game(self):
+        self.stacked_widget.setCurrentWidget(self.game_screen)
+
+    def show_authors(self):
+        self.stacked_widget.setCurrentWidget(self.authors_screen)
 
 
 if __name__ == '__main__':
