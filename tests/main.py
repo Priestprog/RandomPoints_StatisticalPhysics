@@ -4,7 +4,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import numpy as np
+import os
+from pathlib import Path
 from strategies import (
     UniformStrategy, SierpinskiStrategy, ClustersStrategy,
     IsingStrategy, CorrelatedFieldStrategy, LangevinStrategy,
@@ -12,15 +15,20 @@ from strategies import (
     PythagorasTreeStrategy
 )
 
-# Константа масштабирования размера кнопок
+# Константы масштабирования и размеров текста
 SCALE = 1.7
+
+# Размеры текста для диалогового окна с ответом
+DESCRIPTION_TEXT_SIZE = 22  # Размер обычного текста
+FORMULA_TEXT_SIZE = 26      # Размер формул
+FORMULA_SMALL_SIZE = 206    # Размер дополнительных формул
 
 class AnswerDialog(QDialog):
     def __init__(self, strategy_name, description, scale_factor):
         super().__init__()
         self.setWindowTitle("Правильный ответ")
         self.setModal(True)
-        self.resize(int(600 * scale_factor), int(400 * scale_factor))
+        self.resize(int(700 * scale_factor), int(500 * scale_factor))
 
         layout = QVBoxLayout(self)
 
@@ -32,11 +40,11 @@ class AnswerDialog(QDialog):
         title_text.setStyleSheet(f"border: none; background: transparent; font-size: {int(18 * scale_factor)}px;")
         layout.addWidget(title_text)
 
-        # Описание стратегии
+        # Описание стратегии с HTML-форматированием
         description_text = QTextEdit()
-        description_text.setPlainText(description)
+        description_text.setHtml(description)  # используем HTML вместо PlainText
         description_text.setReadOnly(True)
-        description_text.setStyleSheet(f"font-size: {int(14 * scale_factor)}px; padding: {int(10 * scale_factor)}px; border: 1px solid #ccc; border-radius: 5px;")
+        description_text.setStyleSheet(f"font-size: {int(16 * scale_factor)}px; padding: {int(15 * scale_factor)}px; border: 1px solid #ccc; border-radius: 5px; background: white;")
         layout.addWidget(description_text)
 
         # Кнопка закрытия
@@ -48,30 +56,104 @@ class AnswerDialog(QDialog):
 
 def get_strategy_description(strategy_name):
     descriptions = {
-        "Случайные точки": "Простое равномерное распределение случайных точек по всей области. Каждая точка имеет равную вероятность появления в любом месте квадрата.",
+        "Случайные точки": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Равномерное распределение точек {{x<sub>i</sub>}} ∈ [0,1]² с плотностью вероятности <i>p</i>(<i>x</i>) = const.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Каждая точка независима и имеет равную вероятность появления в любой области.</p>
+        """,
 
-        "Равномерная": "Равномерное распределение точек в пространстве. Все области имеют одинаковую вероятность содержать точки.",
+        "Равномерная": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Равномерное распределение точек {{x<sub>i</sub>}} ∈ [0,1]² с плотностью вероятности <i>p</i>(<i>x</i>) = const.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Все области имеют одинаковую вероятность содержать точки.</p>
+        """,
 
-        "Треугольник Серпинского": "Классический фрактал, созданный путем рекурсивного удаления центральных треугольников. Характеризуется самоподобием и имеет дробную размерность между 1 и 2.",
+        "Треугольник Серпинского": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Классический фрактал, построенный итеративным процессом хаотической игры:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                x<sub>n+1</sub> = (x<sub>n</sub> + v<sub>k</sub>) / 2
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где v<sub>k</sub> — случайно выбранная вершина треугольника.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Фрактальная размерность:</b> <i>D</i> = log(3)/log(2) ≈ 1.585</p>
+        """,
 
-        "Кластеризация": "Алгоритм группировки точек в кластеры. Точки формируют отдельные группы (кластеры) с высокой плотностью внутри групп и низкой плотностью между ними.",
+        "Кластеризация": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Процесс группировки точек {{x<sub>i</sub>}} ⊂ ℝ<sup>n</sup> в кластеры C<sub>k</sub>, минимизирующие внутрикластерное расстояние:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                min Σ<sub>k</sub> Σ<sub>x<sub>i</sub>∈C<sub>k</sub></sub> |x<sub>i</sub> - μ<sub>k</sub>|²
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где μ<sub>k</sub> — центр кластера C<sub>k</sub>.</p>
+        """,
 
-        "Изинг": "Модель Изинга из статистической физики, описывающая магнитные свойства материалов. Использует алгоритм Метрополиса для моделирования спиновых систем в состоянии равновесия.",
+        "Изинг": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Спиновая система на решётке S<sub>i</sub> ∈ {{-1, +1}} с гамильтонианом:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                H = -J Σ<sub>⟨i,j⟩</sub> S<sub>i</sub>S<sub>j</sub> - h Σ<sub>i</sub> S<sub>i</sub>
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>J</i> — взаимодействие соседей, <i>h</i> — внешнее поле.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Модель описывает фазовые переходы и магнитные свойства материалов.</p>
+        """,
 
-        "Коррелированное поле": "Пространственно коррелированное случайное поле, созданное с помощью фильтрации гауссова шума. Точки имеют пространственные корреляции и образуют плавные структуры.",
+        "Коррелированное поле": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Случайное поле φ(<i>x</i>) с корреляционной функцией:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                C(<i>r</i>) = ⟨φ(<i>x</i>)φ(<i>x</i>+<i>r</i>)⟩
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Поле создаётся фильтрацией белого шума гауссовым ядром с заданной корреляционной длиной σ.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Точки имеют пространственные корреляции.</p>
+        """,
 
-        "Ланжевен": "Динамика Ланжевена - стохастическое дифференциальное уравнение, описывающее броуновское движение частиц с учетом внешних сил и случайного шума.",
+        "Ланжевен": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Стохастическое дифференциальное уравнение:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                m(dv/dt) = -γv + ξ(t)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где γ — коэффициент трения, ξ(t) — гауссовский шум с</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_SMALL_SIZE}px; padding: 10px;">
+                ⟨ξ(t)ξ(t')⟩ = 2γk<sub>B</sub>T δ(t-t')
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Описывает броуновское движение и флуктуации.</p>
+        """,
 
-        "Дерево Пифагора": "Фрактальная структура, построенная рекурсивно из квадратов, где каждый квадрат порождает два меньших квадрата под углами. Создает древовидную структуру с самоподобными свойствами.",
+        "Дерево Пифагора": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Фрактал, построенный рекурсивно: на квадрате строятся два квадрата со сторонами</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                s<sub>n</sub> = s<sub>n-1</sub>·cos(θ) &nbsp; и &nbsp; s<sub>n-1</sub>·sin(θ)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">образующие прямоугольный треугольник.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Фрактальная размерность:</b> <i>D</i> ≈ 1.5</p>
+        """,
 
-        "Снежинка Коха": "Классический фрактал, созданный путем итеративного добавления треугольных выступов к сторонам треугольника. Имеет бесконечную длину периметра при конечной площади.",
+        "Снежинка Коха": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Фрактальная кривая, строящаяся заменой средней трети каждого отрезка равносторонним треугольником без основания.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Длина после <i>n</i> итераций:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                L<sub>n</sub> = L<sub>0</sub>(4/3)<sup>n</sup>
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Фрактальная размерность:</b> <i>D</i> = ln(4)/ln(3) ≈ 1.262</p>
+        """,
 
-        "Папоротник Барнсли": "Фрактал, созданный с помощью системы итерированных функций (IFS). Четыре аффинных преобразования создают реалистичное изображение папоротника.",
+        "Папоротник Барнсли": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Фрактал, определяемый системой итеративных аффинных преобразований (IFS):</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                f<sub>i</sub>(x,y) = (a<sub>i</sub>x + b<sub>i</sub>y + e<sub>i</sub>, c<sub>i</sub>x + d<sub>i</sub>y + f<sub>i</sub>)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>i</i> = 1,...,4 с вероятностями p<sub>i</sub>.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Фрактальная размерность:</b> <i>D</i> ≈ 1.7</p>
+        """,
 
-        "Множество Жюлиа": "Фрактальное множество в комплексной плоскости, определяемое итерацией комплексной функции. Характеризуется сложной границей и самоподобными структурами."
+        "Множество Жюлиа": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Множество точек <i>z</i> ∈ ℂ, для которых итерация остаётся ограниченной:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                z<sub>n+1</sub> = z<sub>n</sub>² + c
+            </p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 10px;">
+                J<sub>c</sub> = {{z ∈ ℂ : |z<sub>n</sub>| ↛ ∞}}
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Граница J<sub>c</sub> — фрактал с размерностью <i>D</i> ∈ [1,2).</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Цвет точек определяется скоростью расхождения (escape time).</p>
+        """
     }
 
-    return descriptions.get(strategy_name, "Описание недоступно для данной стратегии.")
+    return descriptions.get(strategy_name, "<p>Описание недоступно для данной стратегии.</p>")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -292,9 +374,47 @@ class MainWindow(QMainWindow):
         self.current_strategy = strat  # сохраняем текущую стратегию
 
     def show_correct_answer(self):
-        # отображаем реальное название сгенерированной стратегии
-        self.strategy_name_label.setText(f"Стратегия: {self.current_strategy_name}")
 
+        # Определяем, нужно ли загружать пресет для фракталов
+        preset_mapping = {
+            "Треугольник Серпинского": "Треугольник_Серпинского.png",
+            "Снежинка Коха": "Снежинка_Коха.png",
+            "Папоротник Барнсли": "Папоротник_Барнсли.png",
+            "Множество Жюлиа": "Множество_Жюлиа.png",
+            "Дерево Пифагора": "Дерево_Пифагора.png"
+        }
+
+        # Проверяем, есть ли пресет для текущей стратегии
+        if self.current_strategy_name in preset_mapping:
+            preset_filename = preset_mapping[self.current_strategy_name]
+            preset_path = Path(__file__).parent / preset_filename
+
+            # Если файл существует, загружаем и показываем его
+            if preset_path.exists():
+                self.ax.clear()
+                img = mpimg.imread(str(preset_path))
+                self.ax.imshow(img)
+                self.ax.set_aspect('equal')
+                self.ax.set_xticks([])
+                self.ax.set_yticks([])
+                for spine in self.ax.spines.values():
+                    spine.set_visible(False)
+                self.canvas.draw()
+            else:
+                # Если файла нет, показываем предупреждение и используем стандартную генерацию
+                print(f"ПРЕДУПРЕЖДЕНИЕ: Пресет не найден: {preset_path}")
+                self._show_generated_answer()
+        else:
+            # Для стратегий без пресетов используем стандартную логику
+            self._show_generated_answer()
+
+        # Открываем диалоговое окно с описанием стратегии
+        description = get_strategy_description(self.current_strategy_name)
+        dialog = AnswerDialog(self.current_strategy_name, description, SCALE)
+        dialog.exec()
+
+    def _show_generated_answer(self):
+        """Вспомогательный метод для генерации ответа (для стратегий без пресетов)"""
         # получаем правильную визуализацию от стратегии
         if hasattr(self.current_strategy, 'get_correct_visualization'):
             self.current_strategy.get_correct_visualization(self.ax)
@@ -326,11 +446,6 @@ class MainWindow(QMainWindow):
                 spine.set_visible(False)
 
         self.canvas.draw()
-
-        # Открываем диалоговое окно с описанием стратегии
-        description = get_strategy_description(self.current_strategy_name)
-        dialog = AnswerDialog(self.current_strategy_name, description, SCALE)
-        dialog.exec()
 
 
 if __name__ == '__main__':

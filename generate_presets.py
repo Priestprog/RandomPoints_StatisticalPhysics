@@ -166,7 +166,7 @@ def show_fractal(points, title, color='blue', vertices=None):
     print(f"Отображение: {title}...", end=" ", flush=True)
     start = time.time()
 
-    fig, ax = plt.subplots(figsize=(16, 16), dpi=200)  # еще больше размер
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=150)  # оптимальный размер для быстрой загрузки
 
     # Если это линия (Кох)
     if title == "Снежинка Коха":
@@ -194,9 +194,9 @@ def show_fractal(points, title, color='blue', vertices=None):
     plt.tight_layout()
     print(f"✓ ({time.time() - start:.2f}s)")
 
-    # Сохраняем как PNG в высоком качестве
+    # Сохраняем как PNG в оптимальном качестве
     filename = f'{title.replace(" ", "_")}.png'
-    plt.savefig(filename, dpi=400, bbox_inches='tight')  # dpi=400 для максимального качества
+    plt.savefig(filename, dpi=200, bbox_inches='tight')  # dpi=200 для баланса качества и скорости
     print(f"Сохранено: {filename}")
 
     plt.close(fig)
@@ -207,7 +207,7 @@ def show_julia_colormap(X, Y, iterations, mask, title="Множество Жюл
     print(f"Отображение: {title}...", end=" ", flush=True)
     start = time.time()
 
-    fig, ax = plt.subplots(figsize=(16, 16), dpi=200)
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=150)
 
     # Создаем красивую раскраску
     # Устанавливаем цвет для точек внутри множества (не ушедших на бесконечность)
@@ -232,7 +232,7 @@ def show_julia_colormap(X, Y, iterations, mask, title="Множество Жюл
 
     # Сохраняем как PNG
     filename = f'{title.replace(" ", "_")}.png'
-    plt.savefig(filename, dpi=400, bbox_inches='tight')
+    plt.savefig(filename, dpi=200, bbox_inches='tight')
     print(f"Сохранено: {filename}")
 
     plt.close(fig)
@@ -243,7 +243,7 @@ def show_pythagoras_tree(squares, title="Дерево Пифагора"):
     print(f"Отображение: {title}...", end=" ", flush=True)
     start = time.time()
 
-    fig, ax = plt.subplots(figsize=(16, 16), dpi=200)
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=150)
 
     # Рисуем квадраты
     from matplotlib.patches import Rectangle
@@ -291,7 +291,7 @@ def show_pythagoras_tree(squares, title="Дерево Пифагора"):
 
     # Сохраняем как PNG
     filename = f'{title.replace(" ", "_")}.png'
-    plt.savefig(filename, dpi=400, bbox_inches='tight')
+    plt.savefig(filename, dpi=200, bbox_inches='tight')
     print(f"Сохранено: {filename}")
 
     plt.close(fig)
