@@ -8,6 +8,16 @@ a = Analysis(
     binaries=[],
     datas=[
         ('tests/strategies.py', '.'),
+        ('tests/logo-mgu.png', '.'),
+        ('tests/logo_mmp.png', '.'),
+        ('tests/bagrov.png', '.'),
+        ('tests/lukanov.jpg', '.'),
+        ('tests/chichigina.jpg', '.'),
+        ('tests/Треугольник_Серпинского.png', '.'),
+        ('tests/Снежинка_Коха.png', '.'),
+        ('tests/Папоротник_Барнсли.png', '.'),
+        ('tests/Множество_Жюлиа.png', '.'),
+        ('tests/Дерево_Пифагора.png', '.'),
     ],
     hiddenimports=[
         'PyQt6.QtCore',

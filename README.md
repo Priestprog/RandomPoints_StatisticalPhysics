@@ -45,16 +45,22 @@ StatPhys is an interactive educational tool that brings statistical physics and 
 
 ## 🚀 Quick Start
 
-### Prerequisites
-```bash
-Python 3.8+
-PyQt6
-matplotlib
-numpy
-scipy
-```
+### 📋 Prerequisites
 
-### Installation
+<div align="center">
+
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| ![Python](https://img.shields.io/badge/Python-3.8+-3776AB?logo=python&logoColor=white) | 3.8+ | Core runtime |
+| ![PyQt6](https://img.shields.io/badge/PyQt6-6.5.0+-41CD52?logo=qt&logoColor=white) | ≥6.5.0 | GUI framework |
+| ![Matplotlib](https://img.shields.io/badge/Matplotlib-3.7.0+-11557c?logo=plotly&logoColor=white) | ≥3.7.0 | Visualization |
+| ![NumPy](https://img.shields.io/badge/NumPy-1.24.0+-013243?logo=numpy&logoColor=white) | ≥1.24.0 | Numerical computing |
+| ![SciPy](https://img.shields.io/badge/SciPy-1.10.0+-0C55A5?logo=scipy&logoColor=white) | ≥1.10.0 | Scientific algorithms |
+| ![PyInstaller](https://img.shields.io/badge/PyInstaller-6.0.0+-0080FF?logo=python&logoColor=white) | ≥6.0.0 | Standalone builds |
+
+</div>
+
+### 💻 Installation
 
 1. **Clone the repository**
    ```bash
@@ -70,7 +76,7 @@ scipy
 
 3. **Install dependencies**
    ```bash
-   pip install PyQt6 matplotlib numpy scipy
+   pip install -r requirements.txt
    ```
 
 4. **Run the application**
@@ -78,6 +84,26 @@ scipy
    cd tests
    python main.py
    ```
+
+### 🔨 Building Standalone Executables
+
+#### **macOS**
+```bash
+./build_macos.sh
+# Output: dist/StatPhys.app
+```
+
+#### **Windows**
+```cmd
+build_windows.bat
+# Output: dist\StatPhys.exe
+```
+
+**Note**: Both build scripts automatically:
+- Create/activate virtual environment
+- Install all dependencies
+- Bundle images and resources
+- Generate platform-specific executable
 
 ## 🎯 Usage
 
@@ -175,11 +201,17 @@ scipy
 ```
 StatPhys/
 ├── tests/
-│   ├── main.py           # PyQt6 GUI application
-│   └── strategies.py     # Algorithm implementations
-├── .venv/               # Virtual environment
-├── CLAUDE.md           # Development guidelines
-└── README.md           # This file
+│   ├── main.py                      # PyQt6 GUI application
+│   ├── strategies.py                # Algorithm implementations
+│   ├── ...png                       # presets for visualization
+├── .venv/                          # Virtual environment
+├── requirements.txt                # Python dependencies
+├── statphys.spec                   # PyInstaller config (macOS)
+├── statphys_windows.spec           # PyInstaller config (Windows)
+├── build_macos.sh                  # macOS build script
+├── build_windows.bat               # Windows build script
+├── CLAUDE.md                       # Development guidelines
+└── README.md                       # This file
 ```
 
 ### 🎭 Strategy Pattern
