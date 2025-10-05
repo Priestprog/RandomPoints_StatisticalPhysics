@@ -212,7 +212,7 @@ class MainWindow(QMainWindow):
             points = strat.generate(n)
 
         elif strategy_name == "Изинг":
-            strat = IsingStrategy(grid_size=100, T=2.5, steps=5000)
+            strat = IsingStrategy(grid_size=100, T=2.5, steps=3000)
             self.current_strategy_name = "Изинг"
             points = strat.generate(n)
 
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
             points = strat.generate(n)
 
         elif strategy_name == "Дерево Пифагора":
-            strat = PythagorasTreeStrategy(depth=10)
+            strat = PythagorasTreeStrategy(depth=7)
             self.current_strategy_name = "Дерево Пифагора"
             points = strat.generate(n)
 
@@ -256,11 +256,11 @@ class MainWindow(QMainWindow):
                 # список всех остальных стратегий с их названиями
                 strategies_with_names = [
                     (SierpinskiStrategy(), "Треугольник Серпинского"),
-                    (ClustersStrategy(k=5), "Кластеризация"),
+                    (ClustersStrategy(k=3), "Кластеризация"),
                     (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
                     (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
                     (LangevinStrategy(v=(0.005, 0.0), D=0.002), "Ланжевен"),
-                    (PythagorasTreeStrategy(depth=7, jitter=True), "Дерево Пифагора"),
+                    (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
                     (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
                     (BarnsleyFernStrategy(), "Папоротник Барнсли"),
                     (JuliaSetStrategy(c=-0.7 + 0.27015j, max_iter=200), "Множество Жюлиа")
