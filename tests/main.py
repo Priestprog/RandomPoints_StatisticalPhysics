@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
     QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider)
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -21,7 +21,13 @@ SCALE = 1.7
 # Размеры текста для диалогового окна с ответом
 DESCRIPTION_TEXT_SIZE = 22  # Размер обычного текста
 FORMULA_TEXT_SIZE = 26      # Размер формул
-FORMULA_SMALL_SIZE = 206    # Размер дополнительных формул
+FORMULA_SMALL_SIZE = 20     # Размер дополнительных формул
+
+# Параметры анимации для разных уровней сложности
+# Формат: (интервал в мс, количество точек за шаг)
+EASY_ANIMATION = (300, 30)    # Лёгкий: быстрая анимация
+MEDIUM_ANIMATION = (500, 10)  # Средний: средняя скорость
+HARD_ANIMATION = (1000, 3)     # Сложный: медленная анимация
 
 class AnswerDialog(QDialog):
     def __init__(self, strategy_name, description, scale_factor):
@@ -265,6 +271,14 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(left_panel)
         main_layout.addWidget(self.canvas)
 
+        # Переменные для анимации
+        self.animation_timer = QTimer()
+        self.animation_timer.timeout.connect(self._update_animation)
+        self.current_points = None
+        self.animation_index = 0
+        self.animation_step = 1
+        self.is_animating = False
+
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
         difficulty = self.diff_combo.currentText()
@@ -351,29 +365,90 @@ class MainWindow(QMainWindow):
                 self.current_strategy_name = strategy_display_name
                 points = strat.generate(n)
 
-        # отрисовка точек на графике
-        self.ax.clear()
-        point_size = self.point_size_slider.value()
-        self.ax.scatter(points[:, 0], points[:, 1], s=point_size, color='blue')
-        self.ax.set_aspect('equal')
+        # Сохраняем стратегию
+        self.current_strategy = strat
 
-        # Убираем все элементы кроме точек
+        # Настраиваем анимацию в зависимости от сложности
+        if difficulty == "Лёгкий":
+            animation_interval, step = EASY_ANIMATION
+        elif difficulty == "Средний":
+            animation_interval, step = MEDIUM_ANIMATION
+        else:  # Сложный
+            animation_interval, step = HARD_ANIMATION
+
+        # Получаем размер точек из слайдера
+        point_size = self.point_size_slider.value()
+
+        # Запускаем анимацию
+        self._start_animation(points, point_size, animation_interval, step)
+
+    def _start_animation(self, points, point_size, interval, step):
+        """Запускает анимацию постепенного появления точек"""
+        # Останавливаем предыдущую анимацию, если она была
+        if self.is_animating:
+            self.animation_timer.stop()
+
+        # Очищаем график
+        self.ax.clear()
+        self.ax.set_aspect('equal')
         self.ax.set_xticks([])
         self.ax.set_yticks([])
         self.ax.set_xlim(0, 1)
         self.ax.set_ylim(0, 1)
-
-        # Убираем рамку вокруг графика
         for spine in self.ax.spines.values():
             spine.set_visible(False)
 
+        # Сохраняем параметры анимации
+        self.current_points = points
+        self.current_point_size = point_size
+        self.animation_index = 0
+        self.animation_step = step
+        self.is_animating = True
+
+        # Активируем кнопку ответа
+        self.answer_button.setEnabled(True)
+
+        # Запускаем таймер
+        self.animation_timer.start(interval)
+
+    def _update_animation(self):
+        """Обновляет анимацию, добавляя новые точки"""
+        if self.current_points is None:
+            return
+
+        # Вычисляем индекс конца текущей порции точек
+        end_index = min(self.animation_index + self.animation_step, len(self.current_points))
+
+        # Очищаем и рисуем накопленные точки
+        self.ax.clear()
+        self.ax.set_aspect('equal')
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        self.ax.set_xlim(0, 1)
+        self.ax.set_ylim(0, 1)
+        for spine in self.ax.spines.values():
+            spine.set_visible(False)
+
+        # Рисуем точки от 0 до end_index
+        points_to_show = self.current_points[:end_index]
+        self.ax.scatter(points_to_show[:, 0], points_to_show[:, 1],
+                       s=self.current_point_size, color='blue')
+
         self.canvas.draw()
 
-        # активируем кнопку правильного ответа после генерации
-        self.answer_button.setEnabled(True)
-        self.current_strategy = strat  # сохраняем текущую стратегию
+        # Обновляем индекс
+        self.animation_index = end_index
+
+        # Проверяем, закончилась ли анимация
+        if self.animation_index >= len(self.current_points):
+            self.animation_timer.stop()
+            self.is_animating = False
 
     def show_correct_answer(self):
+        # Останавливаем анимацию, если она идёт
+        if self.is_animating:
+            self.animation_timer.stop()
+            self.is_animating = False
 
         # Определяем, нужно ли загружать пресет для фракталов
         preset_mapping = {
