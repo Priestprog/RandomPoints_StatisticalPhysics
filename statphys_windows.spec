@@ -64,5 +64,4 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=None,  # Можно добавить путь к .ico файлу
-    version='version_info.txt'  # Можно добавить информацию о версии
 )

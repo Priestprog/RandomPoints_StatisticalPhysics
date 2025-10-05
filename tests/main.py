@@ -35,7 +35,11 @@ class AnswerDialog(QDialog):
         super().__init__()
         self.setWindowTitle("Правильный ответ")
         self.setModal(True)
-        self.resize(int(700 * scale_factor), int(500 * scale_factor))
+        # Ограничиваем максимальную высоту окна
+        screen = QApplication.primaryScreen().geometry()
+        max_height = screen.height() - 300  # Оставляем отступ от краёв экрана
+        dialog_height = min(int(500 * scale_factor), max_height)
+        self.resize(int(700 * scale_factor), dialog_height)
 
         layout = QVBoxLayout(self)
 
@@ -218,7 +222,7 @@ class TitleScreen(QWidget):
         button_container.addStretch()
 
         button_layout = QVBoxLayout()
-        button_layout.setSpacing(20)
+        button_layout.setSpacing(30)  # Увеличили отступ между кнопками
 
         # Кнопка "Модель"
         self.play_button = QPushButton("Модель")
