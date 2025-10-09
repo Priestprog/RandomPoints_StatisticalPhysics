@@ -358,7 +358,7 @@ class AuthorsScreen(QWidget):
         author2_container.addSpacing(20)
 
         # Текст автора 2
-        name2 = QLabel("Лукьянов Артём\nузнать отчестово")
+        name2 = QLabel("Лукьянов Артём\nВасильевич")
         name2.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         name2.setAlignment(Qt.AlignmentFlag.AlignCenter)
         author2_container.addWidget(name2)
