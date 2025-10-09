@@ -462,7 +462,8 @@ class GameWindow(QWidget):
 
         # Левая панель с элементами управления
         left_panel = QWidget()
-        left_panel.setFixedWidth(300)
+        left_panel.setMinimumWidth(250)
+        left_panel.setMaximumWidth(350)
         left_layout = QVBoxLayout(left_panel)
 
         # выбор уровня сложности
@@ -562,10 +563,16 @@ class GameWindow(QWidget):
         left_layout.addStretch()
 
         # Правая панель - график matplotlib с квадратными размерами
-        plot_size = 720  # фиксированный размер для всех стратегий
-        self.figure, self.ax = plt.subplots(figsize=(9, 9))
+        self.figure, self.ax = plt.subplots(figsize=(8, 8))
         self.canvas = FigureCanvas(self.figure)
-        self.canvas.setFixedSize(plot_size, plot_size)
+        self.canvas.setMinimumSize(400, 400)  # минимальный размер вместо фиксированного
+
+        # Делаем canvas растягивающимся
+        from PyQt6.QtWidgets import QSizePolicy
+        self.canvas.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding
+        )
 
         # Убираем все отступы вокруг графика
         self.figure.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
@@ -577,12 +584,10 @@ class GameWindow(QWidget):
             spine.set_visible(False)
 
         # Добавляем панели в основную компоновку
-        game_layout.addWidget(left_panel)
-        game_layout.addWidget(self.canvas)
-        game_layout.setAlignment(self.canvas, Qt.AlignmentFlag.AlignTop)  # прижимаем canvas к верху
+        game_layout.addWidget(left_panel, 0)  # 0 - не растягивается
+        game_layout.addWidget(self.canvas, 1)  # 1 - растягивается
 
-        main_layout.addLayout(game_layout)
-        main_layout.addStretch()  # добавляем растягивающийся элемент снизу
+        main_layout.addLayout(game_layout, 1)  # 1 - занимает все доступное пространство
 
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
@@ -827,12 +832,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Генерация точек")
 
-        # Устанавливаем размер окна почти на весь экран
+        # Устанавливаем начальный размер окна почти на весь экран
         screen = QApplication.primaryScreen().geometry()
         self.resize(screen.width(), screen.height() - 100)
 
-        # Фиксируем размер окна
-        self.setFixedSize(screen.width(), screen.height() - 100)
+        # Устанавливаем минимальный размер окна
+        self.setMinimumSize(800, 600)
 
         # Создаём QStackedWidget для переключения между экранами
         self.stacked_widget = QStackedWidget()
