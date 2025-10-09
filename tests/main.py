@@ -432,12 +432,14 @@ class GameWindow(QWidget):
     def init_ui(self):
         # --- GUI: горизонтальная компоновка ---
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 5, 10, 5)  # уменьшаем отступы (left, top, right, bottom)
+        main_layout.setSpacing(5)  # уменьшаем расстояние между элементами
 
         # Кнопка "Назад" вверху
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("← Назад")
         self.back_button.setMaximumWidth(150)
-        self.back_button.setMinimumHeight(40)
+        self.back_button.setMinimumHeight(35)  # уменьшили высоту кнопки
         self.back_button.setStyleSheet("""
             QPushButton {
                 font-size: 16px;
@@ -456,6 +458,7 @@ class GameWindow(QWidget):
 
         # Основная часть игры
         game_layout = QHBoxLayout()
+        game_layout.setContentsMargins(0, 0, 0, 0)  # убираем отступы
 
         # Левая панель с элементами управления
         left_panel = QWidget()
@@ -475,8 +478,8 @@ class GameWindow(QWidget):
         self.strategy_label = QLabel("Стратегия:")
         self.strategy_combo = QComboBox()
         self.strategy_combo.addItems([
-            "Случайный",
-            "Равномерная",
+            "Случайная стратегия",
+            "Случайные точки",
             "Треугольник Серпинского",
             "Кластеризация",
             "Изинг",
@@ -559,10 +562,13 @@ class GameWindow(QWidget):
         left_layout.addStretch()
 
         # Правая панель - график matplotlib с квадратными размерами
-        plot_size = 800  # фиксированный размер для всех стратегий
-        self.figure, self.ax = plt.subplots(figsize=(8, 8))
+        plot_size = 720  # фиксированный размер для всех стратегий
+        self.figure, self.ax = plt.subplots(figsize=(9, 9))
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setFixedSize(plot_size, plot_size)
+
+        # Убираем все отступы вокруг графика
+        self.figure.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
 
         # Настройка начального вида графика - убираем оси и рамку
         self.ax.set_xticks([])
@@ -573,8 +579,10 @@ class GameWindow(QWidget):
         # Добавляем панели в основную компоновку
         game_layout.addWidget(left_panel)
         game_layout.addWidget(self.canvas)
+        game_layout.setAlignment(self.canvas, Qt.AlignmentFlag.AlignTop)  # прижимаем canvas к верху
 
         main_layout.addLayout(game_layout)
+        main_layout.addStretch()  # добавляем растягивающийся элемент снизу
 
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
@@ -589,9 +597,9 @@ class GameWindow(QWidget):
             n = 100
 
         # выбор стратегии
-        if strategy_name == "Равномерная":
+        if strategy_name == "Случайные точки":
             strat = UniformStrategy()
-            self.current_strategy_name = "Равномерная (случайные точки)"
+            self.current_strategy_name = "Случайные точки"
             points = strat.generate(n)
 
         elif strategy_name == "Треугольник Серпинского":
@@ -639,7 +647,7 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Множество Жюлиа"
             points = strat.generate(n)
 
-        elif strategy_name == "Случайный":
+        elif strategy_name == "Случайная стратегия":
             if np.random.rand() < 0.5:
                 # простое равномерное распределение
                 strat = UniformStrategy()
