@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 from strategies import (
     UniformStrategy, SierpinskiStrategy, ClustersStrategy, RepulsionStrategy,
+    BoltzmannStrategy, CrystallizationStrategy,
     IsingStrategy, CorrelatedFieldStrategy, LangevinStrategy,
     KochSnowflakeStrategy, BarnsleyFernStrategy, JuliaSetStrategy,
     PythagorasTreeStrategy
@@ -105,6 +106,39 @@ def get_strategy_description(strategy_name):
             </p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>U</i>(<i>r</i>) = Σ<sub>k</sub> <i>ε</i> / |<i>r</i> - <i>r</i><sub>k</sub>|² — положительная энергия отталкивания от центров, <i>T</i> — температура.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Частицы избегают областей вблизи центров отталкивания, формируя области пониженной плотности (excluded volume effect).</p>
+        """,
+
+        "Больцмана": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Барометрическая формула — распределение частиц в поле тяжести.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Плотность газа в гравитационном поле убывает с высотой по закону:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                ρ(<i>h</i>) = ρ<sub>0</sub> exp(-<i>mgh</i> / k<sub>B</sub>T)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>m</i> — масса частицы, <i>g</i> — ускорение свободного падения, <i>h</i> — высота, <i>T</i> — температура.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">При высокой температуре распределение более равномерное, при низкой — частицы концентрируются у основания.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Описывает распределение молекул в атмосфере, седиментацию коллоидных частиц.</p>
+        """,
+
+        "Кристаллизация (гексагональная)": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Упорядоченная кристаллическая структура с тепловыми колебаниями атомов около положений равновесия.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Гексагональная решётка (структура льда I<sub>h</sub>) с пространственной группой симметрии P6<sub>3</sub>/mmc.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Среднеквадратичное смещение атома от узла решётки:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                ⟨u²⟩ = (ℏ / 2mω) coth(ℏω / 2k<sub>B</sub>T)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где ω — частота колебаний, <i>T</i> — температура.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">При T → 0 колебания минимальны (квантовые нулевые колебания), при T >> T<sub>D</sub> — классический предел.</p>
+        """,
+
+        "Кристаллизация (квадратная)": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Упорядоченная кристаллическая структура с тепловыми колебаниями атомов около положений равновесия.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Простая кубическая решётка (структура типа Po, NaCl) с пространственной группой симметрии Pm3̄m.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Среднеквадратичное смещение атома от узла решётки:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                ⟨u²⟩ = (ℏ / 2mω) coth(ℏω / 2k<sub>B</sub>T)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где ω — частота колебаний, <i>T</i> — температура.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Квадратная решётка имеет координационное число 4 (в отличие от гексагональной с координационным числом 6).</p>
         """,
 
         "Изинг": f"""
@@ -497,6 +531,9 @@ class GameWindow(QWidget):
             "Треугольник Серпинского",
             "Притяжение",
             "Отталкивание",
+            "Больцмана",
+            "Кристаллизация (гексагон.)",
+            "Кристаллизация (квадрат.)",
             "Изинг",
             "Коррелированное поле",
             "Ланжевен",
@@ -618,8 +655,8 @@ class GameWindow(QWidget):
             QSizePolicy.Policy.Expanding
         )
 
-        # Убираем все отступы вокруг графика
-        self.figure.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+        # Настраиваем отступы графика - симметрично для центрирования заголовка
+        self.figure.subplots_adjust(left=0.07, right=0.93, top=0.94, bottom=0.06)
 
         # Настройка начального вида графика - убираем оси и рамку
         self.ax.set_xticks([])
@@ -677,6 +714,21 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Отталкивание"
             points = strat.generate(n)
 
+        elif strategy_name == "Больцмана":
+            strat = BoltzmannStrategy(temperature=0.15)
+            self.current_strategy_name = "Больцмана"
+            points = strat.generate(n)
+
+        elif strategy_name == "Кристаллизация (гексагон.)":
+            strat = CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=0.003)
+            self.current_strategy_name = "Кристаллизация (гексагональная)"
+            points = strat.generate(n)
+
+        elif strategy_name == "Кристаллизация (квадрат.)":
+            strat = CrystallizationStrategy(lattice_type='square', thermal_noise=0.003)
+            self.current_strategy_name = "Кристаллизация (квадратная)"
+            points = strat.generate(n)
+
         elif strategy_name == "Изинг":
             strat = IsingStrategy(grid_size=100, T=2.5, steps=3000)
             self.current_strategy_name = "Изинг"
@@ -721,6 +773,9 @@ class GameWindow(QWidget):
                 (SierpinskiStrategy(), "Треугольник Серпинского"),
                 (ClustersStrategy(k=7), "Притяжение"),
                 (RepulsionStrategy(k=7), "Отталкивание"),
+                (BoltzmannStrategy(temperature=0.15), "Больцмана"),
+                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=0.003), "Кристаллизация (гексагональная)"),
+                (CrystallizationStrategy(lattice_type='square', thermal_noise=0.003), "Кристаллизация (квадратная)"),
                 (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
                 (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
                 (LangevinStrategy(v=(0.005, 0.0), D=0.002), "Ланжевен"),

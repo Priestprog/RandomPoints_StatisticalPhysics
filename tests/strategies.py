@@ -57,6 +57,226 @@ class SierpinskiStrategy:
             spine.set_visible(False)
 
 
+class BoltzmannStrategy:
+    """Распределение Больцмана в поле тяжести"""
+    def __init__(self, temperature=0.15):
+        self.temperature = temperature  # температура (влияет на распределение по высоте)
+
+    def generate(self, n):
+        points = []
+
+        # Генерируем точки с rejection sampling
+        # Плотность вероятности: ρ(y) ∝ exp(-y/T)
+        batch_size = n * 5
+        max_batches = 20
+
+        for _ in range(max_batches):
+            if len(points) >= n:
+                break
+
+            # Генерируем кандидатов
+            candidates = np.random.rand(batch_size, 2)
+
+            # Вероятность принятия зависит от высоты (y-координата)
+            # Внизу (y=0) высокая вероятность, вверху (y=1) низкая
+            acceptance_probs = np.exp(-candidates[:, 1] / self.temperature)
+
+            # Нормализуем к [0, 1]
+            acceptance_probs = acceptance_probs / np.exp(0)  # exp(0) = 1
+
+            # Принимаем точки случайно согласно вероятности
+            random_vals = np.random.rand(batch_size)
+            accepted_mask = random_vals < acceptance_probs
+            accepted_points = candidates[accepted_mask]
+
+            points.extend(accepted_points)
+
+        points = np.array(points[:n])
+
+        # Если не набрали, добавляем случайные
+        while len(points) < n:
+            candidate = np.random.rand(2)
+            prob = np.exp(-candidate[1] / self.temperature)
+            if np.random.rand() < prob:
+                points = np.vstack([points, candidate])
+
+        np.random.shuffle(points)
+        return points
+
+    def get_correct_visualization(self, ax, point_size=2):
+        ax.clear()
+
+        # Генерируем много точек для визуализации
+        n = 3000
+        all_points = self.generate(n)
+
+        # Раскрашиваем точки по высоте (градиент)
+        colors = all_points[:, 1]  # y-координата
+        scatter = ax.scatter(all_points[:, 0], all_points[:, 1],
+                           c=colors, cmap='coolwarm', s=point_size, alpha=0.6)
+
+        # Добавляем шкалу плотности
+        from matplotlib.patches import Rectangle
+        # Рисуем фон - градиент плотности
+        y_values = np.linspace(0, 1, 100)
+        densities = np.exp(-y_values / self.temperature)
+
+        for i, y in enumerate(y_values[:-1]):
+            alpha = densities[i] / densities.max() * 0.2
+            rect = Rectangle((0, y), 1, y_values[1] - y_values[0],
+                           facecolor='blue', alpha=alpha, zorder=0)
+            ax.add_patch(rect)
+
+        # Стрелка вниз (направление гравитации)
+        ax.annotate('g', xy=(0.05, 0.1), xytext=(0.05, 0.3),
+                   arrowprops=dict(arrowstyle='->', lw=3, color='black'),
+                   fontsize=20, fontweight='bold', ha='center')
+
+        ax.set_title(f'Распределение Больцмана (T={self.temperature:.2f})',
+                    fontsize=12, pad=10)
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+
+class CrystallizationStrategy:
+    """Кристаллическая решётка с тепловыми колебаниями"""
+    def __init__(self, lattice_type='hexagonal', thermal_noise=0.003):
+        self.lattice_type = lattice_type  # 'hexagonal' или 'square'
+        self.thermal_noise = thermal_noise  # амплитуда тепловых колебаний
+
+    def generate(self, n):
+        if self.lattice_type == 'hexagonal':
+            return self._generate_hexagonal(n)
+        else:
+            return self._generate_square(n)
+
+    def _generate_hexagonal(self, n):
+        """Генерирует гексагональную решётку (структура льда) - векторизовано на NumPy"""
+        # Используем меньший размер решётки для более крупных ячеек
+        grid_size = int(np.sqrt(n * 1.2)) + 1
+        a = 1.0 / grid_size  # шаг решётки (крупнее)
+
+        # Создаём сетку индексов векторизовано (с запасом для полного покрытия)
+        i_indices = np.arange(grid_size + 3)
+        j_indices = np.arange(grid_size + 3)
+        i_grid, j_grid = np.meshgrid(i_indices, j_indices, indexing='ij')
+
+        # Вычисляем базовые координаты векторизовано
+        x = i_grid * a
+        y = j_grid * a * np.sqrt(3) / 2
+
+        # Смещение для гексагональной структуры (чётные/нечётные ряды)
+        x = x + (j_grid % 2) * (a / 2)
+
+        # Добавляем тепловые колебания векторизовано
+        x = x + np.random.randn(*x.shape) * self.thermal_noise
+        y = y + np.random.randn(*y.shape) * self.thermal_noise
+
+        # Преобразуем в плоский массив точек
+        points = np.stack([x.ravel(), y.ravel()], axis=1)
+
+        # Фильтруем точки строго в границах [0, 1] (векторизовано)
+        mask = (points[:, 0] >= 0) & (points[:, 0] <= 1) & \
+               (points[:, 1] >= 0) & (points[:, 1] <= 1)
+        points = points[mask]
+
+        # Обрезаем до нужного количества
+        if len(points) > n:
+            points = points[:n]
+
+        # ВАЖНО: перемешиваем точки для случайного порядка появления
+        np.random.shuffle(points)
+
+        return points
+
+    def _generate_square(self, n):
+        """Генерирует квадратную решётку - векторизовано на NumPy"""
+        grid_size = int(np.sqrt(n)) + 1
+        a = 1.0 / grid_size
+
+        # Создаём сетку индексов векторизовано
+        i_indices = np.arange(grid_size)
+        j_indices = np.arange(grid_size)
+        i_grid, j_grid = np.meshgrid(i_indices, j_indices, indexing='ij')
+
+        # Вычисляем координаты векторизовано
+        x = i_grid * a
+        y = j_grid * a
+
+        # Добавляем тепловые колебания векторизовано
+        x = x + np.random.randn(*x.shape) * self.thermal_noise
+        y = y + np.random.randn(*y.shape) * self.thermal_noise
+
+        # Преобразуем в плоский массив точек
+        points = np.stack([x.ravel(), y.ravel()], axis=1)
+
+        # Фильтруем точки в границах (векторизовано)
+        mask = (points[:, 0] >= 0) & (points[:, 0] <= 1) & \
+               (points[:, 1] >= 0) & (points[:, 1] <= 1)
+        points = points[mask]
+
+        # Обрезаем до нужного количества
+        if len(points) > n:
+            points = points[:n]
+
+        # Перемешиваем точки для случайного порядка появления
+        np.random.shuffle(points)
+
+        return points
+
+    def get_correct_visualization(self, ax, point_size=2):
+        ax.clear()
+
+        # Генерируем меньше точек для более заметной структуры
+        n = 800
+        all_points = self.generate(n)
+
+        # Рисуем связи между ближайшими соседями
+        from scipy.spatial import Delaunay
+
+        # Триангуляция Делоне для нахождения соседей
+        tri = Delaunay(all_points)
+
+        # Рисуем рёбра (только короткие - между соседями)
+        # Вычисляем оптимальную длину связи на основе плотности решётки
+        grid_size = int(np.sqrt(n * 1.2)) + 1
+        max_edge_length = 1.5 / grid_size  # чуть больше шага решётки
+
+        for simplex in tri.simplices:
+            for i in range(3):
+                p1 = all_points[simplex[i]]
+                p2 = all_points[simplex[(i + 1) % 3]]
+                dist = np.linalg.norm(p1 - p2)
+
+                if dist < max_edge_length:
+                    ax.plot([p1[0], p2[0]], [p1[1], p2[1]],
+                           'cyan', alpha=0.4, linewidth=1.2, zorder=1)
+
+        # Рисуем узлы решётки крупнее
+        ax.scatter(all_points[:, 0], all_points[:, 1],
+                  s=point_size * 3, color='darkblue', alpha=0.9,
+                  edgecolors='white', linewidths=0.5, zorder=2)
+
+        # Заголовок строго по центру
+        lattice_name = 'Гексагональная' if self.lattice_type == 'hexagonal' else 'Квадратная'
+        ax.set_title(f'{lattice_name} решётка (ΔT={self.thermal_noise:.3f})',
+                    fontsize=12, pad=10, loc='center', ha='center')
+
+        # Настройка границ и вида
+        ax.set_aspect('equal')
+        ax.set_xlim(-0.03, 1.03)  # чуть больше отступ для полного покрытия
+        ax.set_ylim(-0.03, 1.03)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+
 class RepulsionStrategy:
     """Стратегия отталкивания: точки избегают центров отталкивания"""
     def __init__(self, k=5):
@@ -174,13 +394,14 @@ class RepulsionStrategy:
                       marker='x', linewidths=4)
 
         ax.set_aspect('equal')
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
+        ax.set_xlim(-0.02, 1.02)  # небольшой отступ, чтобы не обрезать края
+        ax.set_ylim(-0.02, 1.02)
         ax.set_xticks([])
         ax.set_yticks([])
         for spine in ax.spines.values():
             spine.set_visible(False)
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        # Легенда внутри графика, чтобы не обрезать правый край
+        ax.legend(loc='upper right', fontsize=8, framealpha=0.7)
 
 
 class ClustersStrategy:
@@ -250,13 +471,14 @@ class ClustersStrategy:
             ax.scatter(center[0], center[1], s=50, color='black', marker='x')
 
         ax.set_aspect('equal')
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
+        ax.set_xlim(-0.02, 1.02)  # небольшой отступ, чтобы не обрезать края
+        ax.set_ylim(-0.02, 1.02)
         ax.set_xticks([])
         ax.set_yticks([])
         for spine in ax.spines.values():
             spine.set_visible(False)
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        # Легенда внутри графика, чтобы не обрезать правый край
+        ax.legend(loc='upper right', fontsize=8, framealpha=0.7)
 
 
 # === Стратегии из статистической физики ===
