@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
-    QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider, QStackedWidget)
+    QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider, QStackedWidget,
+    QRadioButton, QButtonGroup)
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QFont
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -10,7 +11,7 @@ import numpy as np
 import os
 from pathlib import Path
 from strategies import (
-    UniformStrategy, SierpinskiStrategy, ClustersStrategy,
+    UniformStrategy, SierpinskiStrategy, ClustersStrategy, RepulsionStrategy,
     IsingStrategy, CorrelatedFieldStrategy, LangevinStrategy,
     KochSnowflakeStrategy, BarnsleyFernStrategy, JuliaSetStrategy,
     PythagorasTreeStrategy
@@ -86,12 +87,24 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Фрактальная размерность:</b> <i>D</i> = log(3)/log(2) ≈ 1.585</p>
         """,
 
-        "Кластеризация": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Процесс группировки точек {{x<sub>i</sub>}} ⊂ ℝ<sup>n</sup> в кластеры C<sub>k</sub>, минимизирующие внутрикластерное расстояние:</p>
+        "Притяжение": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Распределение молекул в поле притягивающих центров с потенциалом взаимодействия <i>U</i>(<i>r</i>).</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Каноническое распределение Больцмана в термодинамическом равновесии:</p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                min Σ<sub>k</sub> Σ<sub>x<sub>i</sub>∈C<sub>k</sub></sub> |x<sub>i</sub> - μ<sub>k</sub>|²
+                ρ(<i>r</i>) ∝ exp(-<i>U</i>(<i>r</i>) / k<sub>B</sub>T)
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где μ<sub>k</sub> — центр кластера C<sub>k</sub>.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>U</i>(<i>r</i>) = -Σ<sub>k</sub> <i>ε</i> / |<i>r</i> - <i>r</i><sub>k</sub>|² — энергия взаимодействия с центрами притяжения, <i>T</i> — температура системы.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Молекулы группируются вокруг центров притяжения, образуя области повышенной плотности.</p>
+        """,
+
+        "Отталкивание": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Распределение частиц в поле отталкивающих центров с положительным потенциалом взаимодействия.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Статистическая механика систем с отталкиванием описывается распределением Больцмана:</p>
+            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
+                ρ(<i>r</i>) ∝ exp(-<i>U</i>(<i>r</i>) / k<sub>B</sub>T)
+            </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>U</i>(<i>r</i>) = Σ<sub>k</sub> <i>ε</i> / |<i>r</i> - <i>r</i><sub>k</sub>|² — положительная энергия отталкивания от центров, <i>T</i> — температура.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Частицы избегают областей вблизи центров отталкивания, формируя области пониженной плотности (excluded volume effect).</p>
         """,
 
         "Изинг": f"""
@@ -482,7 +495,8 @@ class GameWindow(QWidget):
             "Случайная стратегия",
             "Случайные точки",
             "Треугольник Серпинского",
-            "Кластеризация",
+            "Притяжение",
+            "Отталкивание",
             "Изинг",
             "Коррелированное поле",
             "Ланжевен",
@@ -496,6 +510,36 @@ class GameWindow(QWidget):
 
         left_layout.addWidget(self.strategy_label)
         left_layout.addWidget(self.strategy_combo)
+
+        # Radio кнопки для режима случайной стратегии
+        self.random_mode_label = QLabel("Режим случайной стратегии:")
+        self.random_mode_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold; margin-top: 10px;")
+        left_layout.addWidget(self.random_mode_label)
+
+        # Группа radio кнопок
+        self.random_mode_group = QButtonGroup()
+
+        self.identify_radio = QRadioButton("Отгадай")
+        self.identify_radio.setChecked(True)
+        self.identify_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(4 * SCALE)}px;")
+        self.random_mode_group.addButton(self.identify_radio, 2)
+        left_layout.addWidget(self.identify_radio)
+
+        self.guess_radio = QRadioButton("Угадай")
+        self.guess_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(4 * SCALE)}px;")
+        self.random_mode_group.addButton(self.guess_radio, 1)
+        left_layout.addWidget(self.guess_radio)
+
+        # Изначально скрываем radio кнопки
+        self.random_mode_label.hide()
+        self.guess_radio.hide()
+        self.identify_radio.hide()
+
+        # Подключаем обработчик изменения стратегии
+        self.strategy_combo.currentTextChanged.connect(self._on_strategy_changed)
+
+        # Проверяем начальное состояние (если уже выбрана случайная стратегия)
+        self._on_strategy_changed(self.strategy_combo.currentText())
 
         # слайдер для скорости анимации (интервал между обновлениями в мс)
         self.speed_label = QLabel("Скорость анимации: 50 мс")
@@ -589,6 +633,17 @@ class GameWindow(QWidget):
 
         main_layout.addLayout(game_layout, 1)  # 1 - занимает все доступное пространство
 
+    def _on_strategy_changed(self, strategy_name):
+        """Показывает/скрывает radio кнопки при выборе случайной стратегии"""
+        if strategy_name == "Случайная стратегия":
+            self.random_mode_label.show()
+            self.guess_radio.show()
+            self.identify_radio.show()
+        else:
+            self.random_mode_label.hide()
+            self.guess_radio.hide()
+            self.identify_radio.hide()
+
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
         difficulty = self.diff_combo.currentText()
@@ -612,9 +667,14 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Треугольник Серпинского"
             points = strat.generate(n)
 
-        elif strategy_name == "Кластеризация":
-            strat = ClustersStrategy(k=3)
-            self.current_strategy_name = "Кластеризация"
+        elif strategy_name == "Притяжение":
+            strat = ClustersStrategy(k=7)
+            self.current_strategy_name = "Притяжение"
+            points = strat.generate(n)
+
+        elif strategy_name == "Отталкивание":
+            strat = RepulsionStrategy(k=7)
+            self.current_strategy_name = "Отталкивание"
             points = strat.generate(n)
 
         elif strategy_name == "Изинг":
@@ -653,25 +713,37 @@ class GameWindow(QWidget):
             points = strat.generate(n)
 
         elif strategy_name == "Случайная стратегия":
-            if np.random.rand() < 0.5:
-                # простое равномерное распределение
-                strat = UniformStrategy()
-                self.current_strategy_name = "Случайные точки"
-                points = strat.generate(n)
+            # Определяем режим: "Угадай" или "Отгадай"
+            is_guess_mode = self.guess_radio.isChecked()
+
+            # список всех остальных стратегий (кроме случайных точек) с их названиями
+            other_strategies = [
+                (SierpinskiStrategy(), "Треугольник Серпинского"),
+                (ClustersStrategy(k=7), "Притяжение"),
+                (RepulsionStrategy(k=7), "Отталкивание"),
+                (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
+                (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
+                (LangevinStrategy(v=(0.005, 0.0), D=0.002), "Ланжевен"),
+                (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
+                (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
+                (BarnsleyFernStrategy(), "Папоротник Барнсли"),
+                (JuliaSetStrategy(c=-0.7 + 0.27015j, max_iter=200), "Множество Жюлиа")
+            ]
+
+            if is_guess_mode:
+                # Режим "Угадай": 50% случайные точки, 50% другая стратегия
+                if np.random.rand() < 0.5:
+                    strat = UniformStrategy()
+                    self.current_strategy_name = "Случайные точки"
+                    points = strat.generate(n)
+                else:
+                    strat, strategy_display_name = other_strategies[np.random.randint(len(other_strategies))]
+                    self.current_strategy_name = strategy_display_name
+                    points = strat.generate(n)
             else:
-                # список всех остальных стратегий с их названиями
-                strategies_with_names = [
-                    (SierpinskiStrategy(), "Треугольник Серпинского"),
-                    (ClustersStrategy(k=3), "Кластеризация"),
-                    (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
-                    (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
-                    (LangevinStrategy(v=(0.005, 0.0), D=0.002), "Ланжевен"),
-                    (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
-                    (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
-                    (BarnsleyFernStrategy(), "Папоротник Барнсли"),
-                    (JuliaSetStrategy(c=-0.7 + 0.27015j, max_iter=200), "Множество Жюлиа")
-                ]
-                strat, strategy_display_name = strategies_with_names[np.random.randint(len(strategies_with_names))]
+                # Режим "Отгадай": все стратегии равновероятны (включая случайные точки)
+                all_strategies = [(UniformStrategy(), "Случайные точки")] + other_strategies
+                strat, strategy_display_name = all_strategies[np.random.randint(len(all_strategies))]
                 self.current_strategy_name = strategy_display_name
                 points = strat.generate(n)
 
@@ -795,8 +867,9 @@ class GameWindow(QWidget):
     def _show_generated_answer(self):
         """Вспомогательный метод для генерации ответа (для стратегий без пресетов)"""
         # получаем правильную визуализацию от стратегии
+        point_size = self.point_size_slider.value()
         if hasattr(self.current_strategy, 'get_correct_visualization'):
-            self.current_strategy.get_correct_visualization(self.ax)
+            self.current_strategy.get_correct_visualization(self.ax, point_size=point_size)
         else:
             # для равномерных стратегий просто меняем цвет на красный
             if isinstance(self.current_strategy, UniformStrategy):

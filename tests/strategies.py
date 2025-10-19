@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter
+import matplotlib.pyplot as plt
 
 
 class UniformStrategy:
@@ -31,11 +32,11 @@ class SierpinskiStrategy:
             points.append(p.copy())
         return np.array(points)
 
-    def get_correct_visualization(self, ax):
+    def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         # генерируем много точек для лучшей визуализации
         points = self.generate(10000)
-        ax.scatter(points[:, 0], points[:, 1], s=0.5, color='blue', alpha=0.8)
+        ax.scatter(points[:, 0], points[:, 1], s=point_size, color='blue', alpha=0.8)
 
         # показываем исходные вершины треугольника
         ax.scatter(self.vertices[:, 0], self.vertices[:, 1], s=100, color='red',
@@ -56,33 +57,196 @@ class SierpinskiStrategy:
             spine.set_visible(False)
 
 
+class RepulsionStrategy:
+    """Стратегия отталкивания: точки избегают центров отталкивания"""
+    def __init__(self, k=5):
+        self.k = k
+        self.centers = None
+
+    def generate(self, n):
+        # Генерируем центры отталкивания
+        self.centers = self._generate_well_separated_centers()
+
+        exclusion_radius = 0.08  # радиус исключённой зоны вокруг центров
+        points = []
+
+        # Векторизованный rejection sampling - генерируем батчами
+        batch_size = n * 3  # генерируем больше точек за раз
+        max_batches = 50
+
+        for _ in range(max_batches):
+            if len(points) >= n:
+                break
+
+            # Генерируем батч кандидатов
+            candidates = np.random.rand(batch_size, 2)
+
+            # Вычисляем расстояния до всех центров для всех кандидатов (векторизовано)
+            # Shape: (batch_size, k)
+            distances = np.sqrt(((candidates[:, np.newaxis, :] - self.centers[np.newaxis, :, :]) ** 2).sum(axis=2))
+
+            # Минимальное расстояние до ближайшего центра для каждого кандидата
+            min_distances = distances.min(axis=1)
+
+            # Фильтруем точки в зоне исключения
+            mask = min_distances >= exclusion_radius
+
+            # Вычисляем вероятности принятия (векторизовано)
+            acceptance_probs = np.minimum(1.0, ((min_distances - exclusion_radius) / 0.9) ** 2)
+
+            # Генерируем случайные числа для всех кандидатов сразу
+            random_vals = np.random.rand(batch_size)
+
+            # Принимаем точки, которые прошли оба фильтра
+            accepted_mask = mask & (random_vals < acceptance_probs)
+            accepted_points = candidates[accepted_mask]
+
+            points.extend(accepted_points)
+
+        # Обрезаем до нужного количества
+        points = np.array(points[:n])
+
+        # Если не набрали достаточно точек, добавляем случайные вдали от центров
+        while len(points) < n:
+            candidate = np.random.rand(2)
+            distances = np.sqrt(((candidate - self.centers) ** 2).sum(axis=1))
+            if distances.min() >= exclusion_radius:
+                points = np.vstack([points, candidate])
+
+        # Перемешиваем точки, чтобы они появлялись в случайном порядке
+        np.random.shuffle(points)
+        return points
+
+    def _generate_well_separated_centers(self):
+        """Генерирует центры отталкивания с минимальным расстоянием между ними"""
+        min_distance = 0.25
+        max_attempts = 1000
+
+        centers = []
+        centers.append(np.random.rand(2))
+
+        for _ in range(self.k - 1):
+            best_candidate = None
+            best_min_dist = 0
+
+            for _ in range(max_attempts):
+                candidate = np.random.rand(2)
+                min_dist = min(np.linalg.norm(candidate - c) for c in centers)
+
+                if min_dist >= min_distance:
+                    best_candidate = candidate
+                    break
+
+                if min_dist > best_min_dist:
+                    best_min_dist = min_dist
+                    best_candidate = candidate
+
+            centers.append(best_candidate)
+
+        return np.array(centers)
+
+    def get_correct_visualization(self, ax, point_size=2):
+        ax.clear()
+        colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+
+        # Генерируем меньше точек для более явного эффекта отталкивания
+        n = 1000
+        all_points = self.generate(n)
+
+        # Раскрашиваем точки в зависимости от ближайшего центра отталкивания
+        for i, center in enumerate(self.centers):
+            color = colors[i % len(colors)]
+            # Точки показываем все вместе одним цветом
+            if i == 0:
+                ax.scatter(all_points[:, 0], all_points[:, 1], s=point_size,
+                          color='blue', alpha=0.6)
+
+            # Показываем центры отталкивания с кругами исключённой зоны
+            circle = plt.Circle(center, 0.08, color=color, fill=True,
+                               linewidth=2, alpha=0.15,
+                               label=f'Центр {i+1}')
+            ax.add_patch(circle)
+            # Внешний контур
+            circle_outline = plt.Circle(center, 0.08, color=color, fill=False,
+                               linewidth=2, linestyle='--', alpha=0.8)
+            ax.add_patch(circle_outline)
+            ax.scatter(center[0], center[1], s=150, color=color,
+                      marker='x', linewidths=4)
+
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+
 class ClustersStrategy:
     def __init__(self, k=5):
         self.k = k
         self.centers = None
 
     def generate(self, n):
-        self.centers = np.random.rand(self.k, 2)
+        # Генерируем центры с минимальным расстоянием между ними
+        self.centers = self._generate_well_separated_centers()
         points = []
         for c in self.centers:
-            cluster = c + 0.05*np.random.randn(n//self.k, 2)
+            cluster = c + 0.08*np.random.randn(n//self.k, 2)
             points.append(cluster)
         all_points = np.vstack(points)
         # Перемешиваем точки, чтобы они появлялись в случайном порядке
         np.random.shuffle(all_points)
         return all_points
 
-    def get_correct_visualization(self, ax):
+    def _generate_well_separated_centers(self):
+        """Генерирует центры кластеров с минимальным расстоянием между ними"""
+        min_distance = 0.25  # минимальное расстояние между центрами
+        max_attempts = 1000
+
+        centers = []
+
+        # Первый центр генерируем случайно
+        centers.append(np.random.rand(2))
+
+        # Остальные центры генерируем с учетом минимального расстояния
+        for _ in range(self.k - 1):
+            best_candidate = None
+            best_min_dist = 0
+
+            # Пробуем несколько кандидатов и выбираем лучший
+            for _ in range(max_attempts):
+                candidate = np.random.rand(2)
+
+                # Вычисляем минимальное расстояние до существующих центров
+                min_dist = min(np.linalg.norm(candidate - c) for c in centers)
+
+                # Если найден центр с достаточным расстоянием, используем его
+                if min_dist >= min_distance:
+                    best_candidate = candidate
+                    break
+
+                # Запоминаем лучшего кандидата
+                if min_dist > best_min_dist:
+                    best_min_dist = min_dist
+                    best_candidate = candidate
+
+            centers.append(best_candidate)
+
+        return np.array(centers)
+
+    def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
 
         # генерируем больше точек для лучшей визуализации
         n = 3000
         for i, center in enumerate(self.centers):
-            cluster = center + 0.05*np.random.randn(n//self.k, 2)
+            cluster = center + 0.08*np.random.randn(n//self.k, 2)
             color = colors[i % len(colors)]
-            ax.scatter(cluster[:, 0], cluster[:, 1], s=2, color=color, alpha=0.7, label=f'Кластер {i+1}')
-            # показываем центры кластеров
+            ax.scatter(cluster[:, 0], cluster[:, 1], s=point_size, color=color, alpha=0.7, label=f'Центр {i+1}')
+            # показываем центры притяжения
             ax.scatter(center[0], center[1], s=50, color='black', marker='x')
 
         ax.set_aspect('equal')
@@ -129,7 +293,7 @@ class IsingStrategy:
             return points[idx]
         return points
 
-    def get_correct_visualization(self, ax):
+    def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         if self.spins is not None:
             # показываем полную решетку спинов
@@ -166,7 +330,7 @@ class CorrelatedFieldStrategy:
         y, x = np.unravel_index(idx, self.corr_field.shape)
         return np.column_stack([x/self.grid_size, y/self.grid_size])
 
-    def get_correct_visualization(self, ax):
+    def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         if self.corr_field is not None:
             # показываем поле как тепловую карту
@@ -204,14 +368,14 @@ class LangevinStrategy:
         self.trajectory = np.clip(self.trajectory, 0, 1)
         return self.trajectory
 
-    def get_correct_visualization(self, ax):
+    def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         if self.trajectory is not None:
             # показываем траекторию как линию
             ax.plot(self.trajectory[:, 0], self.trajectory[:, 1], 'r-', alpha=0.7, linewidth=1)
             # точки с градиентом цвета по времени
             colors = np.linspace(0, 1, len(self.trajectory))
-            ax.scatter(self.trajectory[:, 0], self.trajectory[:, 1], c=colors, cmap='plasma', s=3)
+            ax.scatter(self.trajectory[:, 0], self.trajectory[:, 1], c=colors, cmap='plasma', s=point_size)
             # начальная точка
             ax.scatter(self.trajectory[0, 0], self.trajectory[0, 1], c='green', s=50, marker='o', label='Старт')
             # конечная точка
@@ -324,7 +488,7 @@ class KochSnowflakeStrategy:
             return self.full_curve[idx]
         return self.full_curve
 
-    def get_correct_visualization(self, ax):
+    def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         if self.full_curve is not None:
             # показываем непрерывную линию
