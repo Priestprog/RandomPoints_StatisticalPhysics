@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
     QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider, QStackedWidget,
-    QRadioButton, QButtonGroup)
+    QRadioButton, QButtonGroup, QScrollArea)
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QFont
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -512,13 +512,15 @@ class GameWindow(QWidget):
         left_panel.setMinimumWidth(250)
         left_panel.setMaximumWidth(350)
         left_layout = QVBoxLayout(left_panel)
+        left_layout.setSpacing(int(5 * SCALE))  # Уменьшаем расстояние между элементами
+        left_layout.setContentsMargins(int(5 * SCALE), int(5 * SCALE), int(5 * SCALE), int(5 * SCALE))  # Уменьшаем отступы
 
         # выбор уровня сложности
         self.diff_label = QLabel("Уровень сложности:")
         self.diff_combo = QComboBox()
         self.diff_combo.addItems(["Лёгкий", "Средний", "Сложный"])
-        self.diff_combo.setMinimumHeight(int(30 * SCALE))
-        self.diff_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(6 * SCALE)}px;")
+        self.diff_combo.setMinimumHeight(int(28 * SCALE))
+        self.diff_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(3 * SCALE)}px;")
         left_layout.addWidget(self.diff_label)
         left_layout.addWidget(self.diff_combo)
 
@@ -542,15 +544,15 @@ class GameWindow(QWidget):
             "Папоротник Барнсли",
             "Множество Жюлиа"
         ])
-        self.strategy_combo.setMinimumHeight(int(30 * SCALE))
-        self.strategy_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(6 * SCALE)}px;")
+        self.strategy_combo.setMinimumHeight(int(28 * SCALE))
+        self.strategy_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(3 * SCALE)}px;")
 
         left_layout.addWidget(self.strategy_label)
         left_layout.addWidget(self.strategy_combo)
 
         # Radio кнопки для режима случайной стратегии
         self.random_mode_label = QLabel("Режим случайной стратегии:")
-        self.random_mode_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold; margin-top: 10px;")
+        self.random_mode_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
         left_layout.addWidget(self.random_mode_label)
 
         # Группа radio кнопок
@@ -558,12 +560,12 @@ class GameWindow(QWidget):
 
         self.identify_radio = QRadioButton("Отгадай")
         self.identify_radio.setChecked(True)
-        self.identify_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(4 * SCALE)}px;")
+        self.identify_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(2 * SCALE)}px;")
         self.random_mode_group.addButton(self.identify_radio, 2)
         left_layout.addWidget(self.identify_radio)
 
         self.guess_radio = QRadioButton("Угадай")
-        self.guess_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(4 * SCALE)}px;")
+        self.guess_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(2 * SCALE)}px;")
         self.random_mode_group.addButton(self.guess_radio, 1)
         left_layout.addWidget(self.guess_radio)
 
@@ -623,21 +625,21 @@ class GameWindow(QWidget):
         # кнопка генерации
         self.gen_button = QPushButton("Генерировать")
         self.gen_button.clicked.connect(self.generate_points)
-        self.gen_button.setMinimumHeight(int(40 * SCALE))
-        self.gen_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(8 * SCALE)}px;")
+        self.gen_button.setMinimumHeight(int(35 * SCALE))
+        self.gen_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
         left_layout.addWidget(self.gen_button)
 
         # кнопка показа правильного ответа
         self.answer_button = QPushButton("Ответ")
         self.answer_button.clicked.connect(self.show_correct_answer)
         self.answer_button.setEnabled(False)  # изначально недоступна
-        self.answer_button.setMinimumHeight(int(40 * SCALE))
-        self.answer_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(8 * SCALE)}px;")
+        self.answer_button.setMinimumHeight(int(35 * SCALE))
+        self.answer_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
         left_layout.addWidget(self.answer_button)
 
         # метка для названия стратегии
         self.strategy_name_label = QLabel("")
-        self.strategy_name_label.setStyleSheet("font-weight: bold; color: #333; margin-top: 10px;")
+        self.strategy_name_label.setStyleSheet("font-weight: bold; color: #333;")
         left_layout.addWidget(self.strategy_name_label)
 
         # Добавляем растягивающийся элемент чтобы кнопки были сверху
