@@ -157,37 +157,61 @@ class CrystallizationStrategy:
 
     def _generate_hexagonal(self, n):
         """Генерирует гексагональную решётку (структура льда) - векторизовано на NumPy"""
-        # Используем меньший размер решётки для более крупных ячеек
-        grid_size = int(np.sqrt(n * 1.2)) + 1
-        a = 1.0 / grid_size  # шаг решётки (крупнее)
+        # Размер решётки зависит от количества точек
+        # Для лёгкого уровня (много точек) делаем более крупную решётку
+        if n >= 1000:  # Лёгкий - крупная решётка (меньше узлов)
+            grid_size = int(np.sqrt(n * 0.25)) + 1
+        else:  # Средний и сложный - более плотная решётка
+            grid_size = int(np.sqrt(n * 1.2)) + 1
 
-        # Создаём сетку индексов векторизовано (с запасом для полного покрытия)
-        i_indices = np.arange(grid_size + 3)
-        j_indices = np.arange(grid_size + 3)
+        # Параметры гексагональной решётки
+        a_x = 1.0 / grid_size  # шаг по X
+        a_y = np.sqrt(3) / 2 / grid_size  # шаг по Y
+
+        # Генерируем больше точек, чтобы гарантированно покрыть всю область [0,1]
+        # Создаём сетку индексов векторизовано (с большим запасом)
+        i_indices = np.arange(0, int(grid_size * 1.3))
+        j_indices = np.arange(0, int(grid_size * 2))  # еще больше по Y
         i_grid, j_grid = np.meshgrid(i_indices, j_indices, indexing='ij')
 
-        # Вычисляем базовые координаты векторизовано
-        x = i_grid * a
-        y = j_grid * a * np.sqrt(3) / 2
+        # Вычисляем базовые координаты
+        x = i_grid * a_x
+        y = j_grid * a_y
 
         # Смещение для гексагональной структуры (чётные/нечётные ряды)
-        x = x + (j_grid % 2) * (a / 2)
+        x = x + (j_grid % 2) * (a_x / 2)
 
-        # Добавляем тепловые колебания векторизовано
-        x = x + np.random.randn(*x.shape) * self.thermal_noise
-        y = y + np.random.randn(*y.shape) * self.thermal_noise
-
-        # Преобразуем в плоский массив точек
+        # Преобразуем в плоский массив точек ДО добавления шума
         points = np.stack([x.ravel(), y.ravel()], axis=1)
 
-        # Фильтруем точки строго в границах [0, 1] (векторизовано)
-        mask = (points[:, 0] >= 0) & (points[:, 0] <= 1) & \
-               (points[:, 1] >= 0) & (points[:, 1] <= 1)
-        points = points[mask]
+        # Растягиваем на всё полотно [0,1]×[0,1]
+        # Нормализуем по X и Y независимо для максимального заполнения
+        if len(points) > 0:
+            x_min, x_max = points[:, 0].min(), points[:, 0].max()
+            y_min, y_max = points[:, 1].min(), points[:, 1].max()
 
-        # Обрезаем до нужного количества
+            # Растягиваем и по X, и по Y на весь диапазон [0,1]
+            if x_max > x_min:
+                points[:, 0] = (points[:, 0] - x_min) / (x_max - x_min)
+            if y_max > y_min:
+                points[:, 1] = (points[:, 1] - y_min) / (y_max - y_min)
+
+        # Обрезаем до нужного количества ПЕРЕД добавлением шума
         if len(points) > n:
-            points = points[:n]
+            # Для малого количества точек используем случайную выборку
+            # Это лучше показывает структуру решётки при меньшей плотности
+            indices = np.random.choice(len(points), n, replace=False)
+            points = points[indices]
+
+        # Добавляем тепловые колебания
+        points[:, 0] = points[:, 0] + np.random.randn(len(points)) * self.thermal_noise
+        points[:, 1] = points[:, 1] + np.random.randn(len(points)) * self.thermal_noise
+
+        # Возвращаем точки в границы (не удаляем, а обрезаем)
+        points = np.clip(points, 0.0, 1.0)
+
+        # Сохраняем точки для визуализации ответа
+        self.last_generated_points = points.copy()
 
         # ВАЖНО: перемешиваем точки для случайного порядка появления
         np.random.shuffle(points)
@@ -196,8 +220,13 @@ class CrystallizationStrategy:
 
     def _generate_square(self, n):
         """Генерирует квадратную решётку - векторизовано на NumPy"""
-        grid_size = int(np.sqrt(n)) + 1
-        a = 1.0 / grid_size
+        # Размер решётки зависит от количества точек
+        # Для лёгкого уровня (много точек) делаем более крупную решётку
+        if n >= 1000:  # Лёгкий - крупная решётка (меньше узлов)
+            grid_size = int(np.sqrt(n * 0.5)) + 1
+        else:  # Средний и сложный - более плотная решётка (менее очевидная)
+            grid_size = int(np.sqrt(n * 2)) + 1
+        a = 1.0 / (grid_size - 1) if grid_size > 1 else 1.0  # шаг решётки для полного покрытия [0,1]
 
         # Создаём сетку индексов векторизовано
         i_indices = np.arange(grid_size)
@@ -208,21 +237,25 @@ class CrystallizationStrategy:
         x = i_grid * a
         y = j_grid * a
 
-        # Добавляем тепловые колебания векторизовано
-        x = x + np.random.randn(*x.shape) * self.thermal_noise
-        y = y + np.random.randn(*y.shape) * self.thermal_noise
-
         # Преобразуем в плоский массив точек
         points = np.stack([x.ravel(), y.ravel()], axis=1)
 
-        # Фильтруем точки в границах (векторизовано)
-        mask = (points[:, 0] >= 0) & (points[:, 0] <= 1) & \
-               (points[:, 1] >= 0) & (points[:, 1] <= 1)
-        points = points[mask]
-
-        # Обрезаем до нужного количества
+        # Обрезаем до нужного количества ПЕРЕД добавлением шума
         if len(points) > n:
-            points = points[:n]
+            # Для малого количества точек используем случайную выборку
+            # Это лучше показывает структуру решётки при меньшей плотности
+            indices = np.random.choice(len(points), n, replace=False)
+            points = points[indices]
+
+        # Добавляем тепловые колебания
+        points[:, 0] = points[:, 0] + np.random.randn(len(points)) * self.thermal_noise
+        points[:, 1] = points[:, 1] + np.random.randn(len(points)) * self.thermal_noise
+
+        # Возвращаем точки в границы (не удаляем, а обрезаем)
+        points = np.clip(points, 0.0, 1.0)
+
+        # Сохраняем точки для визуализации ответа
+        self.last_generated_points = points.copy()
 
         # Перемешиваем точки для случайного порядка появления
         np.random.shuffle(points)
@@ -232,9 +265,12 @@ class CrystallizationStrategy:
     def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
 
-        # Генерируем меньше точек для более заметной структуры
-        n = 800
-        all_points = self.generate(n)
+        # Используем ТЕ ЖЕ точки, что были сгенерированы в игре
+        if not hasattr(self, 'last_generated_points') or self.last_generated_points is None:
+            # Если точки не были сохранены, генерируем новые
+            all_points = self.generate(800)
+        else:
+            all_points = self.last_generated_points
 
         # Рисуем связи между ближайшими соседями
         from scipy.spatial import Delaunay
@@ -244,8 +280,9 @@ class CrystallizationStrategy:
 
         # Рисуем рёбра (только короткие - между соседями)
         # Вычисляем оптимальную длину связи на основе плотности решётки
+        n = len(all_points)
         grid_size = int(np.sqrt(n * 1.2)) + 1
-        max_edge_length = 1.5 / grid_size  # чуть больше шага решётки
+        max_edge_length = 1.5 / (grid_size - 1) if grid_size > 1 else 1.5  # чуть больше шага решётки
 
         for simplex in tri.simplices:
             for i in range(3):

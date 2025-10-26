@@ -748,12 +748,26 @@ class GameWindow(QWidget):
             points = strat.generate(n)
 
         elif strategy_name == "Кристаллизация (гексагон.)":
-            strat = CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=0.003)
+            # Температура зависит от уровня сложности
+            if n >= 1000:  # Лёгкий
+                thermal_noise = 0.002
+            elif n >= 300:  # Средний
+                thermal_noise = 0.003
+            else:  # Сложный (n = 100)
+                thermal_noise = 0.004
+            strat = CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise)
             self.current_strategy_name = "Кристаллизация (гексагональная)"
             points = strat.generate(n)
 
         elif strategy_name == "Кристаллизация (квадрат.)":
-            strat = CrystallizationStrategy(lattice_type='square', thermal_noise=0.003)
+            # Температура зависит от уровня сложности
+            if n >= 1000:  # Лёгкий
+                thermal_noise = 0.002
+            elif n >= 300:  # Средний
+                thermal_noise = 0.005
+            else:  # Сложный (n = 100)
+                thermal_noise = 0.009
+            strat = CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise)
             self.current_strategy_name = "Кристаллизация (квадратная)"
             points = strat.generate(n)
 
@@ -796,14 +810,22 @@ class GameWindow(QWidget):
             # Определяем режим: "Угадай" или "Отгадай"
             is_guess_mode = self.guess_radio.isChecked()
 
+            # Температура зависит от уровня сложности
+            if n >= 1000:  # Лёгкий
+                thermal_noise = 0.003
+            elif n >= 300:  # Средний
+                thermal_noise = 0.004
+            else:  # Сложный (n = 100)
+                thermal_noise = 0.005
+
             # список всех остальных стратегий (кроме случайных точек) с их названиями
             other_strategies = [
                 (SierpinskiStrategy(), "Треугольник Серпинского"),
                 (ClustersStrategy(k=7), "Притяжение"),
                 (RepulsionStrategy(k=7), "Отталкивание"),
                 (BoltzmannStrategy(temperature=0.15), "Больцмана"),
-                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=0.003), "Кристаллизация (гексагональная)"),
-                (CrystallizationStrategy(lattice_type='square', thermal_noise=0.003), "Кристаллизация (квадратная)"),
+                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise), "Кристаллизация (гексагональная)"),
+                (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise), "Кристаллизация (квадратная)"),
                 (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
                 (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
                 (RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2), "Случайное блуждание"),
