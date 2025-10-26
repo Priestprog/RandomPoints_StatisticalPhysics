@@ -785,16 +785,32 @@ class JuliaSetStrategy:
     """
     Множество Жюлиа: z -> z^2 + c.
     Используем escape-time алгоритм, берём точки, не ушедшие за порог.
+
+    Параметры для настройки:
+    - c: комплексная константа (влияет на форму множества)
+    - x_min, x_max: диапазон по оси X (по умолчанию -1.5, 1.5)
+    - y_min, y_max: диапазон по оси Y (по умолчанию -1.5, 1.5)
+    - max_iter: количество итераций (больше = точнее, но медленнее)
+    - threshold: порог "убегания" (обычно 2.0)
+    - grid: размер сетки (больше = точнее, но медленнее)
     """
-    def __init__(self, c=-0.7+0.27015j, max_iter=200, threshold=2.0, grid=500):
+    def __init__(self, c=-0.7+0.27015j,
+                 x_min=-1.5, x_max=1.5,
+                 y_min=-1.5, y_max=1.5,
+                 max_iter=200, threshold=2.0, grid=500):
         self.c = c
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
         self.max_iter = max_iter
         self.threshold = threshold
         self.grid = grid
 
     def generate(self, n):
-        lin = np.linspace(-1.5, 1.5, self.grid)
-        X, Y = np.meshgrid(lin, lin)
+        lin_x = np.linspace(self.x_min, self.x_max, self.grid)
+        lin_y = np.linspace(self.y_min, self.y_max, self.grid)
+        X, Y = np.meshgrid(lin_x, lin_y)
         Z = X + 1j*Y
         mask = np.ones(Z.shape, dtype=bool)
         C = np.full(Z.shape, self.c)
@@ -802,10 +818,51 @@ class JuliaSetStrategy:
             Z[mask] = Z[mask]**2 + C[mask]
             mask[np.abs(Z) > self.threshold] = False
         points = np.column_stack([X[mask], Y[mask]])
-        # нормируем в [0,1]^2
-        points[:,0] = (points[:,0] - points[:,0].min())/(points[:,0].max()-points[:,0].min())
-        points[:,1] = (points[:,1] - points[:,1].min())/(points[:,1].max()-points[:,1].min())
+
+        # Проверяем, что есть точки
+        if len(points) == 0:
+            # Если множество пустое, возвращаем случайные точки
+            return np.random.rand(n, 2)
+
+        # Нормируем в [0,1]^2 относительно заданных границ области просмотра
+        # Это гарантирует, что все точки будут видны без обрезания
+        points[:,0] = (points[:,0] - self.x_min) / (self.x_max - self.x_min)
+        points[:,1] = (points[:,1] - self.y_min) / (self.y_max - self.y_min)
+
+        # Отфильтровываем точки, которые вышли за пределы [0,1]^2
+        # (это может произойти, если область просмотра меньше множества)
+        mask = (points[:, 0] >= 0) & (points[:, 0] <= 1) & \
+               (points[:, 1] >= 0) & (points[:, 1] <= 1)
+        points = points[mask]
+
+        if len(points) == 0:
+            # Если все точки вне области, возвращаем случайные
+            return np.random.rand(n, 2)
+
         if len(points) > n:
             idx = np.random.choice(len(points), n, replace=False)
             return points[idx]
         return points
+
+    def get_correct_visualization(self, ax, point_size=2):
+        """Показывает правильную визуализацию множества Жюлиа с большим количеством точек"""
+        ax.clear()
+
+        # Генерируем множество с большим количеством точек для лучшей визуализации
+        n_vis = 5000
+        all_points = self.generate(n_vis)
+
+        # Рисуем точки
+        ax.scatter(all_points[:, 0], all_points[:, 1], s=point_size, color='blue', alpha=0.6)
+
+        # Добавляем информацию о параметрах
+        ax.set_title(f'Множество Жюлиа (c={self.c.real:.3f}{self.c.imag:+.3f}i)',
+                    fontsize=12, pad=10)
+
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)

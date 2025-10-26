@@ -107,6 +107,8 @@ def generate_julia_set():
     print("Генерация множества Жюлиа...", end=" ", flush=True)
     start = time.time()
 
+    # ВАЖНО: Эти параметры должны совпадать с JULIA_PRESET в tests/main.py!
+    # (c, threshold, и диапазон -1.5 до 1.5)
     c = -0.7 + 0.27015j
     max_iter = 512  # много итераций для красивой раскраски
     threshold = 2.0
