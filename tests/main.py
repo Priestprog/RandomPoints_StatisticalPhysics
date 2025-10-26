@@ -13,7 +13,7 @@ from pathlib import Path
 from strategies import (
     UniformStrategy, SierpinskiStrategy, ClustersStrategy, RepulsionStrategy,
     BoltzmannStrategy, CrystallizationStrategy,
-    IsingStrategy, CorrelatedFieldStrategy, LangevinStrategy,
+    IsingStrategy, CorrelatedFieldStrategy, RandomWalkRepulsionStrategy,
     KochSnowflakeStrategy, BarnsleyFernStrategy, JuliaSetStrategy,
     PythagorasTreeStrategy
 )
@@ -159,16 +159,13 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Точки имеют пространственные корреляции.</p>
         """,
 
-        "Ланжевен": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Стохастическое дифференциальное уравнение:</p>
+        "Случайное блуждание": f"""
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Частица совершает большие случайные шаги в произвольном направлении:</p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                m(dv/dt) = -γv + ξ(t)
+                r<sub>n+1</sub> = r<sub>n</sub> + L·(cos(θ), sin(θ))
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где γ — коэффициент трения, ξ(t) — гауссовский шум с</p>
-            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_SMALL_SIZE}px; padding: 10px;">
-                ⟨ξ(t)ξ(t')⟩ = 2γk<sub>B</sub>T δ(t-t')
-            </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Описывает броуновское движение и флуктуации.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где θ — случайный угол, L — размер шага.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">При столкновении с границами частица отражается обратно.</p>
         """,
 
         "Дерево Пифагора": f"""
@@ -538,7 +535,7 @@ class GameWindow(QWidget):
             "Кристаллизация (квадрат.)",
             "Изинг",
             "Коррелированное поле",
-            "Ланжевен",
+            "Случайное блуждание",
             "Дерево Пифагора",
             "Снежинка Коха",
             "Папоротник Барнсли",
@@ -741,9 +738,9 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Коррелированное поле"
             points = strat.generate(n)
 
-        elif strategy_name == "Ланжевен":
-            strat = LangevinStrategy(v=(0.005, 0.0), D=0.002, dt=1.0)
-            self.current_strategy_name = "Ланжевен"
+        elif strategy_name == "Случайное блуждание":
+            strat = RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2)
+            self.current_strategy_name = "Случайное блуждание"
             points = strat.generate(n)
 
         elif strategy_name == "Дерево Пифагора":
@@ -780,7 +777,7 @@ class GameWindow(QWidget):
                 (CrystallizationStrategy(lattice_type='square', thermal_noise=0.003), "Кристаллизация (квадратная)"),
                 (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
                 (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
-                (LangevinStrategy(v=(0.005, 0.0), D=0.002), "Ланжевен"),
+                (RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2), "Случайное блуждание"),
                 (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
                 (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
                 (BarnsleyFernStrategy(), "Папоротник Барнсли"),

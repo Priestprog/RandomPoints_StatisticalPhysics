@@ -567,43 +567,72 @@ class CorrelatedFieldStrategy:
             spine.set_visible(False)
 
 
-class LangevinStrategy:
+class RandomWalkRepulsionStrategy:
     """
-    Броуновское движение с дрейфом (уравнение Ланжевена).
-    dx = v dt + sqrt(2D dt) * N(0,1)
+    Случайное блуждание с отталкиванием от стенок.
+    Частица делает большие случайные шаги и отражается от границ графика.
     """
-    def __init__(self, v=(0.01,0.0), D=0.005, dt=1.0):
-        self.v = np.array(v)
-        self.D = D
-        self.dt = dt
+    def __init__(self, step_size=0.12, repulsion_strength=0.2):
+        self.step_size = step_size  # размер шага (большой)
+        self.repulsion_strength = repulsion_strength  # сила отталкивания от стенок
         self.trajectory = None
 
     def generate(self, n):
         points = [np.array([0.5, 0.5])]
+
         for _ in range(n-1):
-            drift = self.v * self.dt
-            noise = np.sqrt(2*self.D*self.dt) * np.random.randn(2)
-            new_point = points[-1] + drift + noise
+            current = points[-1]
+
+            # Случайное направление (случайное блуждание)
+            angle = np.random.rand() * 2 * np.pi
+            random_step = self.step_size * np.array([np.cos(angle), np.sin(angle)])
+
+            # Пробная новая точка
+            new_point = current + random_step
+
+            # Отталкивание от краёв графика
+            # Если точка выходит за границы, отражаем её
+            if new_point[0] < 0:
+                new_point[0] = -new_point[0] * self.repulsion_strength
+            elif new_point[0] > 1:
+                new_point[0] = 1 - (new_point[0] - 1) * self.repulsion_strength
+
+            if new_point[1] < 0:
+                new_point[1] = -new_point[1] * self.repulsion_strength
+            elif new_point[1] > 1:
+                new_point[1] = 1 - (new_point[1] - 1) * self.repulsion_strength
+
+            # Гарантируем нахождение в границах
+            new_point = np.clip(new_point, 0.0, 1.0)
+
             points.append(new_point)
+
         self.trajectory = np.array(points)
-        # нормируем в [0,1]^2
-        self.trajectory = np.clip(self.trajectory, 0, 1)
         return self.trajectory
 
     def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
         if self.trajectory is not None:
-            # показываем траекторию как линию
-            ax.plot(self.trajectory[:, 0], self.trajectory[:, 1], 'r-', alpha=0.7, linewidth=1)
-            # точки с градиентом цвета по времени
+            # Показываем границы графика более явно
+            ax.plot([0, 1, 1, 0, 0], [0, 0, 1, 1, 0], 'r-', linewidth=2, alpha=0.5, label='Границы')
+
+            # Показываем траекторию как линию
+            ax.plot(self.trajectory[:, 0], self.trajectory[:, 1], 'b-', alpha=0.5, linewidth=1.5)
+
+            # Точки с градиентом цвета по времени
             colors = np.linspace(0, 1, len(self.trajectory))
             ax.scatter(self.trajectory[:, 0], self.trajectory[:, 1], c=colors, cmap='plasma', s=point_size)
-            # начальная точка
+
+            # Начальная точка
             ax.scatter(self.trajectory[0, 0], self.trajectory[0, 1], c='green', s=50, marker='o', label='Старт')
-            # конечная точка
+
+            # Конечная точка
             ax.scatter(self.trajectory[-1, 0], self.trajectory[-1, 1], c='red', s=50, marker='s', label='Финиш')
-            ax.set_title(f'Ланжевен (v={self.v}, D={self.D})', fontsize=12, pad=10)
-            ax.legend()
+
+            ax.set_title(f'Случайное блуждание (шаг={self.step_size:.2f})',
+                        fontsize=12, pad=10)
+            ax.legend(loc='upper right', fontsize=8)
+
         ax.set_aspect('equal')
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
