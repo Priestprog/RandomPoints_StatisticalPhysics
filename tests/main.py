@@ -13,7 +13,7 @@ from pathlib import Path
 from strategies import (
     UniformStrategy, SierpinskiStrategy, ClustersStrategy, RepulsionStrategy,
     BoltzmannStrategy, CrystallizationStrategy,
-    IsingStrategy, CorrelatedFieldStrategy, RandomWalkRepulsionStrategy,
+    IsingStrategy, RandomWalkRepulsionStrategy,
     KochSnowflakeStrategy, BarnsleyFernStrategy, JuliaSetStrategy,
     PythagorasTreeStrategy
 )
@@ -164,15 +164,6 @@ def get_strategy_description(strategy_name):
             </p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где <i>J</i> — взаимодействие соседей, <i>h</i> — внешнее поле.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Модель описывает фазовые переходы и магнитные свойства материалов.</p>
-        """,
-
-        "Коррелированное поле": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Случайное поле φ(<i>x</i>) с корреляционной функцией:</p>
-            <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                C(<i>r</i>) = ⟨φ(<i>x</i>)φ(<i>x</i>+<i>r</i>)⟩
-            </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Поле создаётся фильтрацией белого шума гауссовым ядром с заданной корреляционной длиной σ.</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Точки имеют пространственные корреляции.</p>
         """,
 
         "Случайное блуждание": f"""
@@ -550,7 +541,6 @@ class GameWindow(QWidget):
             "Кристаллизация (гексагон.)",
             "Кристаллизация (квадрат.)",
             "Изинг",
-            "Коррелированное поле",
             "Случайное блуждание",
             "Дерево Пифагора",
             "Снежинка Коха",
@@ -785,11 +775,6 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Изинг"
             points = strat.generate(n)
 
-        elif strategy_name == "Коррелированное поле":
-            strat = CorrelatedFieldStrategy(grid_size=150, sigma=5.0)
-            self.current_strategy_name = "Коррелированное поле"
-            points = strat.generate(n)
-
         elif strategy_name == "Случайное блуждание":
             strat = RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2)
             self.current_strategy_name = "Случайное блуждание"
@@ -836,7 +821,6 @@ class GameWindow(QWidget):
                 (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise), "Кристаллизация (гексагональная)"),
                 (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise), "Кристаллизация (квадратная)"),
                 (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
-                (CorrelatedFieldStrategy(grid_size=150, sigma=5.0), "Коррелированное поле"),
                 (RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2), "Случайное блуждание"),
                 (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
                 (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
