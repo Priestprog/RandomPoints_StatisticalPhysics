@@ -771,9 +771,20 @@ class GameWindow(QWidget):
             points = strat.generate(n)
 
         elif strategy_name == "Изинг":
-            strat = IsingStrategy(grid_size=100, T=2.5, steps=3000)
+            # T=1.8 для заметной кластеризации (домены 10-30 спинов)
+            # steps вычисляется автоматически на основе T (~200,000 для T=1.8)
+            strat = IsingStrategy(grid_size=100, T=2.1, J=2.0)
             self.current_strategy_name = "Изинг"
-            points = strat.generate(n)
+
+            # Для Изинга используем проценты от всех доступных точек
+            if difficulty == "Лёгкий":
+                sample_fraction = 1.0  # 100% точек
+            elif difficulty == "Средний":
+                sample_fraction = 0.1  # 70% точек
+            else:  # Сложный
+                sample_fraction = 0.05  # 40% точек
+
+            points = strat.generate(n=n, sample_fraction=sample_fraction)
 
         elif strategy_name == "Случайное блуждание":
             strat = RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2)
@@ -820,7 +831,7 @@ class GameWindow(QWidget):
                 (BoltzmannStrategy(temperature=0.15), "Больцмана"),
                 (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise), "Кристаллизация (гексагональная)"),
                 (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise), "Кристаллизация (квадратная)"),
-                (IsingStrategy(grid_size=100, T=2.5, steps=3000), "Изинг"),
+                (IsingStrategy(grid_size=100, T=1.8, J=1.0), "Изинг"),
                 (RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2), "Случайное блуждание"),
                 (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
                 (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),

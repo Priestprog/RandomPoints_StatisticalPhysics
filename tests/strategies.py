@@ -525,39 +525,123 @@ class IsingStrategy:
     Упрощённая модель Изинга: генерируем решётку спинов +1/-1,
     выбираем точки со спином +1.
     """
-    def __init__(self, grid_size=100, T=2.5, J=1.0, steps=10000):
+    def __init__(self, grid_size=100, T=2.5, J=1.0, h=0.0, steps=None):
         self.grid_size = grid_size
         self.T = T  # температура
         self.J = J  # сила взаимодействия
-        self.steps = steps
+        self.h = h  # внешнее магнитное поле
+
+        # Адаптивный выбор количества шагов на основе температуры
+        if steps is None:
+            if T < 1.0:
+                # Низкая температура - много шагов для достижения равновесия
+                self.steps = grid_size * grid_size * 100
+            elif T < 2.0:
+                # Средняя температура - среднее количество шагов
+                self.steps = grid_size * grid_size * 20
+            else:
+                # Высокая температура - мало шагов
+                self.steps = grid_size * grid_size * 10
+        else:
+            self.steps = steps
+
         self.spins = None
 
-    def generate(self, n):
+    def generate(self, n, sample_fraction=1.0):
+        """
+        Генерирует точки по модели Изинга
+
+        Args:
+            n: максимальное количество точек (не используется напрямую, см. sample_fraction)
+            sample_fraction: доля точек для отображения (0.0-1.0)
+                1.0 = 100% точек (легкий уровень)
+                0.7 = 70% точек (средний уровень)
+                0.4 = 40% точек (сложный уровень)
+        """
         N = self.grid_size
-        self.spins = np.random.choice([-1, 1], size=(N, N))
+
+        # Умная инициализация: для низких температур начинаем с упорядоченного состояния
+        if self.T < 2.0:
+            # Упорядоченная конфигурация (все спины +1)
+            self.spins = np.ones((N, N), dtype=int)
+        else:
+            # Случайная конфигурация
+            self.spins = np.random.choice([-1, 1], size=(N, N))
+
         # Метод Метрополиса
         for _ in range(self.steps):
             i, j = np.random.randint(0, N, 2)
             s = self.spins[i, j]
             nb = self.spins[(i+1)%N,j] + self.spins[(i-1)%N,j] + self.spins[i,(j+1)%N] + self.spins[i,(j-1)%N]
-            dE = 2 * self.J * s * nb
+
+            # Учет внешнего магнитного поля
+            dE = 2 * self.J * s * (nb + self.h)
+
             if dE < 0 or np.random.rand() < np.exp(-dE/self.T):
                 self.spins[i,j] *= -1
+
         # Берём только "спины вверх"
         coords = np.argwhere(self.spins == 1)
+        # np.argwhere возвращает [row, col] = [Y, X]
+        # Меняем порядок на [col, row] = [X, Y] для scatter
         # нормируем в [0,1]^2
-        points = coords / N
-        if len(points) > n:
-            idx = np.random.choice(len(points), n, replace=False)
-            return points[idx]
+        points = coords[:, [1, 0]] / N
+
+        # ВАЖНО: Перемешиваем точки для случайного порядка появления
+        np.random.shuffle(points)
+
+        # Сохраняем ВСЕ точки для использования в get_correct_visualization()
+        self.last_generated_points = points.copy()
+
+        # Возвращаем sample_fraction от всех точек
+        n_to_return = int(len(points) * sample_fraction)
+        if n_to_return > 0:
+            return points[:n_to_return]
         return points
 
     def get_correct_visualization(self, ax, point_size=2):
         ax.clear()
+
         if self.spins is not None:
-            # показываем полную решетку спинов
-            ax.imshow(self.spins, cmap='RdBu', origin='lower', extent=[0, 1, 0, 1])
-            ax.set_title(f'Модель Изинга (T={self.T})', fontsize=12, pad=10)
+            N = self.grid_size
+
+            # 1. Показываем тепловую карту решетки спинов (фон)
+            # Красный = +1 (спины вверх), Синий = -1 (спины вниз)
+            im = ax.imshow(self.spins, cmap='RdBu_r', origin='lower',
+                          extent=[0, 1, 0, 1], alpha=0.6, vmin=-1, vmax=1)
+
+            # 2. Находим все точки со спинами +1 и -1
+            # np.argwhere возвращает [row, col] = [Y, X]
+            # Меняем порядок на [col, row] = [X, Y] для scatter
+            coords_plus = np.argwhere(self.spins == 1)[:, [1, 0]] / N  # Спины +1
+            coords_minus = np.argwhere(self.spins == -1)[:, [1, 0]] / N  # Спины -1
+
+            # 3. Рисуем точки двух типов
+            if len(coords_plus) > 0:
+                ax.scatter(coords_plus[:, 0], coords_plus[:, 1],
+                          s=point_size*2, color='darkred', alpha=0.8,
+                          label=f'Спины ↑ (+1): {len(coords_plus)}',
+                          edgecolors='none')
+
+            if len(coords_minus) > 0:
+                ax.scatter(coords_minus[:, 0], coords_minus[:, 1],
+                          s=point_size*2, color='darkblue', alpha=0.8,
+                          label=f'Спины ↓ (-1): {len(coords_minus)}',
+                          edgecolors='none')
+
+
+            # 5. Статистика
+            total = len(coords_plus) + len(coords_minus)
+            magnetization = (len(coords_plus) - len(coords_minus)) / total if total > 0 else 0
+
+            # 6. Заголовок с подробной информацией
+            title = f'Модель Изинга: T={self.T:.2f}, J={self.J:.1f}'
+            ax.set_title(title, fontsize=11, pad=10)
+
+            # 7. Легенда
+            ax.legend(loc='upper right', fontsize=9, framealpha=0.8,
+                     markerscale=1.5, handlelength=1)
+
         ax.set_aspect('equal')
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
