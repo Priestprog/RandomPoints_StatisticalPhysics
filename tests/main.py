@@ -42,19 +42,6 @@ JULIA_PRESET = {
     'grid': 500             # Размер сетки (1200 в пресете, но это очень долго)
 }
 
-# Популярные пресеты для различных форм множества Жюлиа:
-# c = -0.7 + 0.27015j    # Классическая форма (дракон) ← ИСПОЛЬЗУЕТСЯ
-# c = -0.8 + 0.156j      # Спиральная форма
-# c = 0.285 + 0.01j      # Дендриты
-# c = -0.4 + 0.6j        # Сложная структура
-# c = -0.162 + 1.04j     # Кружевная структура
-# c = 0.3 + 0.5j         # Дисковая форма
-
-# Примеры масштабирования (zoom):
-# Для общего вида: x_min=-1.5, x_max=1.5, y_min=-1.5, y_max=1.5 ← ИСПОЛЬЗУЕТСЯ
-# Для увеличения центра: x_min=-0.5, x_max=0.5, y_min=-0.5, y_max=0.5
-# Для асимметричного увеличения: x_min=-1.0, x_max=0.5, y_min=-0.8, y_max=0.8
-
 # Параметры анимации для разных уровней сложности
 # Формат: (интервал в мс, количество точек за шаг)
 EASY_ANIMATION = (300, 30)    # Лёгкий: быстрая анимация
@@ -611,11 +598,11 @@ class GameWindow(QWidget):
         self.speed_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setMinimum(10)
-        self.speed_slider.setMaximum(500)
+        self.speed_slider.setMaximum(1000)
         self.speed_slider.setValue(50)
         self.speed_slider.setMinimumHeight(int(25 * SCALE))
         self.speed_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
-        self.speed_slider.valueChanged.connect(lambda value: self.speed_label.setText(f"Скорость анимации: {value} мс"))
+        self.speed_slider.valueChanged.connect(self._on_speed_changed)
 
         left_layout.addWidget(self.speed_label)
         left_layout.addWidget(self.speed_slider)
@@ -629,7 +616,7 @@ class GameWindow(QWidget):
         self.points_per_step_slider.setValue(10)
         self.points_per_step_slider.setMinimumHeight(int(25 * SCALE))
         self.points_per_step_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
-        self.points_per_step_slider.valueChanged.connect(lambda value: self.points_per_step_label.setText(f"Точек за шаг: {value}"))
+        self.points_per_step_slider.valueChanged.connect(self._on_points_per_step_changed)
 
         left_layout.addWidget(self.points_per_step_label)
         left_layout.addWidget(self.points_per_step_slider)
@@ -639,11 +626,11 @@ class GameWindow(QWidget):
         self.point_size_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
         self.point_size_slider = QSlider(Qt.Orientation.Horizontal)
         self.point_size_slider.setMinimum(1)
-        self.point_size_slider.setMaximum(20)
+        self.point_size_slider.setMaximum(30)
         self.point_size_slider.setValue(3)
         self.point_size_slider.setMinimumHeight(int(25 * SCALE))
         self.point_size_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
-        self.point_size_slider.valueChanged.connect(lambda value: self.point_size_label.setText(f"Размер точек: {value}"))
+        self.point_size_slider.valueChanged.connect(self._on_point_size_changed)
 
         left_layout.addWidget(self.point_size_label)
         left_layout.addWidget(self.point_size_slider)
@@ -708,6 +695,28 @@ class GameWindow(QWidget):
             self.random_mode_label.hide()
             self.guess_radio.hide()
             self.identify_radio.hide()
+
+    def _on_speed_changed(self, value):
+        """Обработчик изменения скорости анимации"""
+        self.speed_label.setText(f"Скорость анимации: {value} мс")
+        # Если анимация идёт, изменяем интервал таймера
+        if self.is_animating:
+            self.animation_timer.setInterval(value)
+
+    def _on_points_per_step_changed(self, value):
+        """Обработчик изменения количества точек за шаг"""
+        self.points_per_step_label.setText(f"Точек за шаг: {value}")
+        # Обновляем шаг анимации во время воспроизведения
+        self.animation_step = value
+
+    def _on_point_size_changed(self, value):
+        """Обработчик изменения размера точек"""
+        self.point_size_label.setText(f"Размер точек: {value}")
+        # Обновляем текущий размер точек
+        self.current_point_size = value
+        # Если анимация идёт, перерисовываем с новым размером
+        if self.is_animating and self.current_points is not None:
+            self._redraw_current_frame()
 
     def generate_points(self):
         strategy_name = self.strategy_combo.currentText()
@@ -891,6 +900,29 @@ class GameWindow(QWidget):
 
         # Запускаем таймер
         self.animation_timer.start(interval)
+
+    def _redraw_current_frame(self):
+        """Перерисовывает текущий кадр анимации (например, при изменении размера точек)"""
+        if self.current_points is None:
+            return
+
+        # Очищаем и рисуем накопленные точки с текущим размером
+        self.ax.clear()
+        self.ax.set_aspect('equal')
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        self.ax.set_xlim(0, 1)
+        self.ax.set_ylim(0, 1)
+        for spine in self.ax.spines.values():
+            spine.set_visible(False)
+
+        # Рисуем точки от 0 до animation_index
+        points_to_show = self.current_points[:self.animation_index]
+        if len(points_to_show) > 0:
+            self.ax.scatter(points_to_show[:, 0], points_to_show[:, 1],
+                           s=self.current_point_size, color='blue')
+
+        self.canvas.draw()
 
     def _update_animation(self):
         """Обновляет анимацию, добавляя новые точки"""
