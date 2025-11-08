@@ -65,6 +65,9 @@ jobs:
     - name: Package Linux build
       if: matrix.platform == 'linux'
       run: |
+        # Освобождаем место
+        rm -rf ~/.cache/pip
+        rm -rf build/
         cd dist
         tar -czf ../apps/StatPhys-linux-x64.tar.gz StatPhys
 
@@ -72,15 +75,20 @@ jobs:
       if: matrix.platform == 'windows'
       shell: pwsh
       run: |
+        # Освобождаем место
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$env:LOCALAPPDATA\pip\Cache"
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "build"
         Compress-Archive -Path dist/StatPhys.exe -DestinationPath apps/StatPhys-windows-x64.zip
 
     - name: Package macOS build
       if: matrix.platform == 'macos'
       run: |
+        # Освобождаем место: удаляем кеш и временные файлы
+        rm -rf ~/.cache/pip
+        rm -rf build/
+
         cd dist
-        # Create DMG for macOS
-        hdiutil create -volname "StatPhys" -srcfolder StatPhys.app -ov -format UDZO ../apps/StatPhys-macos-x64.dmg
-        # Also create a zip
+        # Создаем только ZIP (DMG требует слишком много места на GitHub Actions)
         zip -r ../apps/StatPhys-macos-x64.zip StatPhys.app
 
     - name: Upload artifact

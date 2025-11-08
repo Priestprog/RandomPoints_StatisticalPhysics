@@ -18,12 +18,13 @@ GitHub Actions автоматически создает исполняемые 
 Сборка производится для:
 
 - **macOS** (Intel/Apple Silicon)
-  - Выходной файл: `StatPhys-macos-x64.dmg` и `.zip`
-  - Формат: `.app` bundle
+  - Выходной файл: `StatPhys-macos-x64.zip`
+  - Формат: `.app` bundle в ZIP архиве
+  - Примечание: DMG не создается из-за ограничений места на GitHub Actions
 
 - **Windows** (64-bit)
   - Выходной файл: `StatPhys-windows-x64.zip`
-  - Формат: `.exe` исполняемый файл
+  - Формат: `.exe` исполняемый файл в ZIP архиве
 
 - **Linux** (x64)
   - Выходной файл: `StatPhys-linux-x64.tar.gz`

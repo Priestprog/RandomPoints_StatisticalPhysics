@@ -59,19 +59,25 @@ if [ "$OS" == "macos" ]; then
     if [ -d "dist/StatPhys.app" ]; then
         echo "✓ Приложение собрано: dist/StatPhys.app"
 
-        # Создаем DMG
-        echo "📦 Создание DMG..."
-        hdiutil create -volname "StatPhys" -srcfolder dist/StatPhys.app -ov -format UDZO apps/StatPhys-macos-x64.dmg
-
-        # Создаем ZIP
+        # Создаем ZIP (основной формат)
         echo "📦 Создание ZIP..."
         cd dist
         zip -r ../apps/StatPhys-macos-x64.zip StatPhys.app
         cd ..
 
         echo "✅ Сборка завершена!"
-        echo "   DMG: apps/StatPhys-macos-x64.dmg"
         echo "   ZIP: apps/StatPhys-macos-x64.zip"
+
+        # Опционально: создаем DMG (может не хватить места на CI)
+        if command -v hdiutil &> /dev/null; then
+            echo ""
+            echo "📦 Создание DMG (опционально)..."
+            if hdiutil create -volname "StatPhys" -srcfolder dist/StatPhys.app -ov -format UDZO apps/StatPhys-macos-x64.dmg 2>/dev/null; then
+                echo "   DMG: apps/StatPhys-macos-x64.dmg"
+            else
+                echo "⚠️  DMG не создан (возможно нехватка места)"
+            fi
+        fi
     else
         echo "❌ Ошибка сборки"
         exit 1
