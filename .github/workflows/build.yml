@@ -18,15 +18,15 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
-            artifact_name: StatPhys-linux
+            artifact_name: Random_points-linux
             artifact_path: dist/StatPhys
           - os: windows-latest
             platform: windows
-            artifact_name: StatPhys-windows
+            artifact_name: Random_points-windows
             artifact_path: dist/StatPhys.exe
           - os: macos-latest
             platform: macos
-            artifact_name: StatPhys-macos
+            artifact_name: Random_points-macos
             artifact_path: dist/StatPhys.app
 
     steps:
@@ -69,7 +69,7 @@ jobs:
         rm -rf ~/.cache/pip
         rm -rf build/
         cd dist
-        tar -czf ../apps/StatPhys-linux-x64.tar.gz StatPhys
+        tar -czf ../apps/Random_points-linux-x64.tar.gz StatPhys
 
     - name: Package Windows build
       if: matrix.platform == 'windows'
@@ -78,7 +78,7 @@ jobs:
         # Освобождаем место
         Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$env:LOCALAPPDATA\pip\Cache"
         Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "build"
-        Compress-Archive -Path dist/StatPhys.exe -DestinationPath apps/StatPhys-windows-x64.zip
+        Compress-Archive -Path dist/StatPhys.exe -DestinationPath apps/Random_points-windows-x64.zip
 
     - name: Package macOS build
       if: matrix.platform == 'macos'
@@ -89,7 +89,7 @@ jobs:
 
         cd dist
         # Создаем только ZIP (DMG требует слишком много места на GitHub Actions)
-        zip -r ../apps/StatPhys-macos-x64.zip StatPhys.app
+        zip -r ../apps/Random_points-macos-x64.zip StatPhys.app
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

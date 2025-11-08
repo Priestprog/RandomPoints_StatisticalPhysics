@@ -18,16 +18,16 @@ GitHub Actions автоматически создает исполняемые 
 Сборка производится для:
 
 - **macOS** (Intel/Apple Silicon)
-  - Выходной файл: `StatPhys-macos-x64.zip`
+  - Выходной файл: `Random_points-macos-x64.zip`
   - Формат: `.app` bundle в ZIP архиве
   - Примечание: DMG не создается из-за ограничений места на GitHub Actions
 
 - **Windows** (64-bit)
-  - Выходной файл: `StatPhys-windows-x64.zip`
+  - Выходной файл: `Random_points-windows-x64.zip`
   - Формат: `.exe` исполняемый файл в ZIP архиве
 
 - **Linux** (x64)
-  - Выходной файл: `StatPhys-linux-x64.tar.gz`
+  - Выходной файл: `Random_points-linux-x64.tar.gz`
   - Формат: standalone исполняемый файл
 
 ## Где найти собранные файлы
@@ -37,7 +37,10 @@ GitHub Actions автоматически создает исполняемые 
 1. Перейдите в **Actions** на GitHub
 2. Выберите нужный workflow run
 3. Прокрутите вниз до секции **Artifacts**
-4. Скачайте нужную платформу
+4. Скачайте нужную платформу:
+   - `Random_points-macos`
+   - `Random_points-linux`
+   - `Random_points-windows`
 
 Артефакты хранятся **30 дней**.
 

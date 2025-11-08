@@ -8,9 +8,9 @@
 [![SciPy](https://img.shields.io/badge/SciPy-%230C55A5.svg?style=for-the-badge&logo=scipy&logoColor=%white)](https://scipy.org)
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black)](https://matplotlib.org)
 
-*A sophisticated PyQt6 application for generating and visualizing various point distributions using mathematical and physical strategies*
+*A sophisticated PyQt6 application for generating and visualizing pseudorandom point structures using mathematical and statistical physics strategies*
 
-[🚀 Features](#-features) • [📖 Usage](#-usage) • [🧮 Algorithms](#-algorithms) • [💻 Installation](#-installation) • [🎯 Examples](#-examples)
+[🚀 Features](#-features) • [💻 Installation](#-installation) • [🎯 Usage](#-usage) • [🧮 Theory](#-theoretical-background) • [🔨 Building](#-building-executables)
 
 </div>
 
@@ -18,32 +18,50 @@
 
 ## 🌟 Overview
 
-StatPhys is an interactive educational tool that brings statistical physics and fractal geometry to life through stunning visualizations. Generate point distributions using a variety of algorithms ranging from simple uniform distributions to complex fractals and physical models like the Ising model and Langevin dynamics.
+StatPhys is an interactive educational tool that brings statistical physics, fractal geometry, and stochastic processes to life through stunning visualizations. Generate point distributions using algorithms ranging from simple uniform distributions to complex fractals and physical models like the Ising model, crystallization, and Langevin dynamics.
 
-<div align="center">
+**Perfect for students, researchers, and enthusiasts exploring:**
+- Monte Carlo methods
+- Statistical mechanics & phase transitions
+- Fractal geometry & chaos theory
+- Stochastic processes & pattern formation
 
-*Perfect for students, researchers, and enthusiasts exploring the intersection of physics, mathematics, and computation*
+### 👥 Authors
 
-</div>
+**Alexander Bagrov** & **Alexey Lukyanov**
+*Students at Lomonosov Moscow State University*
+*Faculty of Computational Mathematics and Cybernetics*
+*Department of Mathematical Methods of Forecasting*
+
+---
 
 ## ✨ Features
 
-### 🎨 **Visualization Strategies**
-- **🎲 Basic Patterns**: Uniform, Random Walk, Sierpinski Triangle, Clusters
-- **⚛️ Physics Models**: Ising Model, Correlated Fields, Langevin Dynamics
-- **🌿 Fractals**: Koch Snowflake, Barnsley Fern, Julia Set, Pythagoras Tree
+### 🎨 **14+ Generation Strategies**
+
+| Category | Strategies |
+|----------|------------|
+| **🎲 Basic** | Uniform Distribution, Random Walk, Clusters |
+| **⚛️ Statistical Physics** | Ising Model, Langevin Dynamics, Boltzmann Distribution, Attraction/Repulsion |
+| **🔮 Crystallization** | Hexagonal Lattice, Square Lattice |
+| **🌿 Fractals** | Sierpinski Triangle, Koch Snowflake, Barnsley Fern, Julia Set, Pythagoras Tree |
 
 ### 🎛️ **Interactive Controls**
-- **📊 Difficulty Levels**: Easy (1000 pts), Medium (300 pts), Hard (100 pts)
-- **🔄 Random Strategy Selection**: Surprise yourself with random patterns
-- **👁️ Answer Reveal**: See the enhanced visualization with strategy details
+- **📊 Difficulty Levels**: Adjustable point density (Easy/Medium/Hard)
+- **🎬 Animation Mode**: Step-by-step generation with dynamic parameter control
+- **🔍 Answer Reveal**: Enhanced visualization with detailed theoretical descriptions
+- **🎲 Random Strategy**: Automatic random strategy selection
+- **⚙️ Real-time Sliders**: Control animation speed, points per step, and point size on-the-fly
 
 ### 🖼️ **Modern GUI**
 - **🎯 Clean PyQt6 Interface**: Intuitive controls with matplotlib integration
 - **📐 Fixed Aspect Ratio**: Consistent square visualizations
-- **🎪 Real-time Generation**: Instant pattern creation and display
+- **🎪 Title Screen**: Beautiful landing page with university logos and author information
+- **📚 Theory Display**: Pop-up windows with mathematical formulations and physics explanations
 
-## 🚀 Quick Start
+---
+
+## 💻 Installation
 
 ### 📋 Prerequisites
 
@@ -60,7 +78,7 @@ StatPhys is an interactive educational tool that brings statistical physics and 
 
 </div>
 
-### 💻 Installation
+### 🚀 Quick Start
 
 1. **Clone the repository**
    ```bash
@@ -85,214 +103,468 @@ StatPhys is an interactive educational tool that brings statistical physics and 
    python main.py
    ```
 
-### 🔨 Building Standalone Executables
-
-#### **macOS**
-```bash
-./build_macos.sh
-# Output: dist/StatPhys.app
-```
-
-#### **Windows**
-```cmd
-build_windows.bat
-# Output: dist\StatPhys.exe
-```
-
-**Note**: Both build scripts automatically:
-- Create/activate virtual environment
-- Install all dependencies
-- Bundle images and resources
-- Generate platform-specific executable
+---
 
 ## 🎯 Usage
 
 ### Basic Operation
-1. **Select Difficulty**: Choose point density (Easy/Medium/Hard)
-2. **Pick Strategy**: Select from 11 different generation algorithms
-3. **Generate**: Click "Сгенерировать" to create your visualization
-4. **Reveal Answer**: Click "Узнать правильный ответ" for enhanced view
 
-### Strategy Guide
+1. **Launch**: Run the application and click "Модель" on the title screen
+2. **Select Strategy**: Choose from 14+ generation algorithms in the dropdown
+3. **Set Difficulty**: Pick Easy (1000 pts), Medium (300 pts), or Hard (100 pts)
+4. **Generate**: Click "Сгенерировать" to create your visualization
+5. **Animate** (optional): Click "Анимация" for step-by-step generation
+6. **Reveal Answer**: Click "Узнать правильный ответ" for enhanced view with theory
 
-| Category | Strategy | Description |
-|----------|----------|-------------|
-| 🎲 **Basic** | Uniform | Pure random distribution |
-| 🎲 **Basic** | Sierpinski | Classic fractal triangle |
-| 🎲 **Basic** | Clusters | K-means style groupings |
-| ⚛️ **Physics** | Ising Model | Spin system equilibration |
-| ⚛️ **Physics** | Correlated Field | Gaussian filtered noise |
-| ⚛️ **Physics** | Langevin | Brownian motion with drift |
-| 🌿 **Fractals** | Koch Snowflake | Recursive geometric pattern |
-| 🌿 **Fractals** | Barnsley Fern | IFS-based natural form |
-| 🌿 **Fractals** | Julia Set | Complex dynamics visualization |
-| 🌿 **Fractals** | Pythagoras Tree | Recursive square construction |
+### Animation Controls
 
-## 🧮 Algorithms
+During animation, you can dynamically adjust:
+- **Speed**: Animation interval (100-2000 ms)
+- **Points per step**: How many points to add each frame (1-100)
+- **Point size**: Visual size of displayed points (1-20)
 
-### 🔬 Statistical Physics Models
+### macOS Users - Removing Quarantine
 
-#### **Ising Model** (`IsingStrategy`)
-- **Method**: Metropolis Monte Carlo algorithm
-- **Parameters**: Grid size (100×100), Temperature (2.5), Steps (5000)
-- **Physics**: Simulates ferromagnetic phase transitions
-```python
-# Energy calculation: E = -J * Σ(si * sj)
-# Acceptance probability: P = exp(-ΔE/kT)
+If you download a pre-built `.app` bundle on macOS, you may need to remove the quarantine attribute:
+
+```bash
+# Remove quarantine from the app
+xattr -d com.apple.quarantine /path/to/StatPhys.app
+
+# Or recursively clear all attributes
+xattr -cr /path/to/StatPhys.app
 ```
 
-#### **Correlated Field** (`CorrelatedFieldStrategy`)
-- **Method**: Gaussian noise filtering with scipy
-- **Parameters**: Grid (150×150), Correlation length (σ=5.0)
-- **Physics**: Spatially correlated random fields
-```python
-# Generate white noise → Apply Gaussian filter → Sample proportionally
+After this, you can open the app normally.
+
+---
+
+## 🔨 Building Executables
+
+### Cross-Platform Builds via GitHub Actions
+
+This project includes automated builds for all platforms via GitHub Actions:
+
+- **macOS**: `Random_points-macos-x64.zip` (`.app` bundle)
+- **Windows**: `Random_points-windows-x64.zip` (`.exe` executable)
+- **Linux**: `Random_points-linux-x64.tar.gz` (standalone binary)
+
+**Triggers:**
+- Push to `main` branch
+- Pull requests to `main`
+- Version tags (e.g., `v1.0.0`) → Creates GitHub Release
+- Manual workflow dispatch
+
+See `.github/ACTIONS_README.md` for detailed CI/CD documentation.
+
+### Local Builds
+
+#### macOS
+```bash
+./build_all.sh
+# Output: dist/StatPhys.app
+# Package: apps/Random_points-macos-x64.zip
 ```
 
-#### **Langevin Dynamics** (`LangevinStrategy`)
-- **Method**: Stochastic differential equation integration
-- **Parameters**: Drift velocity, Diffusion coefficient, Time step
-- **Physics**: Brownian motion in potential fields
-```python
-# dx = v*dt + √(2D*dt) * η(t)
+#### Windows
+```powershell
+.\build_all.ps1
+# Output: dist\StatPhys.exe
+# Package: apps\Random_points-windows-x64.zip
 ```
 
-### 🌿 Fractal Generators
+#### Linux
+```bash
+./build_all.sh
+# Output: dist/StatPhys
+# Package: apps/Random_points-linux-x64.tar.gz
+```
 
-#### **Sierpinski Triangle** (`SierpinskiStrategy`)
-- **Method**: Chaos game algorithm
-- **Vertices**: Equilateral triangle corners
-- **Rule**: Jump halfway to random vertex
+All build scripts automatically:
+- Create/activate virtual environment
+- Install dependencies from `requirements.txt`
+- Bundle images and resources via PyInstaller
+- Generate platform-specific executable
+- Create distribution archives
 
-#### **Koch Snowflake** (`KochSnowflakeStrategy`)
-- **Method**: Recursive line segment subdivision
-- **Iterations**: 4 levels of detail
-- **Geometry**: 60° triangular protrusions
+---
 
-#### **Barnsley Fern** (`BarnsleyFernStrategy`)
-- **Method**: Iterated Function System (IFS)
-- **Transformations**: 4 affine mappings with probabilities
-- **Result**: Natural fern-like structure
+## 🧮 Theoretical Background
 
-#### **Julia Set** (`JuliaSetStrategy`)
-- **Method**: Complex dynamics escape-time algorithm
-- **Function**: z → z² + c (c = -0.7 + 0.27015i)
-- **Criterion**: |z| > 2 escape threshold
+### 📚 Statistical Physics & Stochastic Processes
 
-## 🎨 Visual Examples
+This application demonstrates key concepts in statistical mechanics:
+- **Entropy**: Measure of disorder in point distributions
+- **Phase Transitions**: Qualitative changes in system state (e.g., Ising model)
+- **Correlations**: Statistical interdependence between spatial regions
+- **Fluctuations**: Random deviations from mean values
+- **Self-Organization**: Spontaneous emergence of ordered structures
 
-<div align="center">
+### 🎲 Strategy Descriptions
 
-| Pattern | Difficulty | Points | Characteristics |
-|---------|------------|--------|-----------------|
-| 🔺 Sierpinski | Easy | 1000 | Self-similar fractal |
-| ⚛️ Ising | Medium | 300 | Phase separation |
-| 🌿 Barnsley Fern | Hard | 100 | Natural recursion |
-| 🏔️ Julia Set | Easy | 1000 | Complex boundaries |
+#### **Uniform Distribution**
+*Classical random point distribution on [0,1]²*
 
-*Each pattern reveals unique mathematical beauty at different scales*
+**Mathematical Description:**
+```
+x, y ~ U(0, 1)
+P(x, y) = const
+```
+Each coordinate is independently sampled from a uniform distribution. Models ideal gas behavior.
 
-</div>
+---
+
+#### **Sierpinski Triangle**
+*Fractal structure via chaos game algorithm*
+
+**Algorithm:**
+1. Start with three vertices of an equilateral triangle
+2. Random initial point
+3. Each step: pick random vertex, move halfway toward it
+
+**Mathematical Description:**
+```
+P_{n+1} = (P_n + V_i) / 2
+```
+where V_i is a randomly chosen vertex
+
+**Properties:**
+- Fractal dimension: D = ln(3)/ln(2) ≈ 1.585
+- Self-similarity at all scales
+- Deterministic fractal from stochastic process
+
+---
+
+#### **Ising Model**
+*Classical model for ferromagnetism and phase transitions*
+
+**Hamiltonian:**
+```
+H = -J Σ_{⟨i,j⟩} s_i·s_j
+```
+where s_i = ±1 (spins), J > 0 (exchange interaction), ⟨i,j⟩ (nearest neighbors)
+
+**Metropolis Algorithm:**
+1. Randomly select a spin
+2. Calculate energy change ΔE if flipped
+3. Accept with probability P = min(1, exp(-ΔE/(k_B·T)))
+
+**Temperature Regimes:**
+- **T ≪ T_c**: Ordered ferromagnetic phase
+- **T ≈ T_c**: Critical region (fluctuations at all scales)
+- **T ≫ T_c**: Disordered paramagnetic phase
+
+**Critical Temperature (2D):** T_c = 2J/(k_B·ln(1 + √2)) ≈ 2.269 J/k_B
+
+---
+
+#### **Random Walk (Brownian Motion)**
+*Models diffusion and particle trajectories*
+
+**Mathematical Description:**
+```
+x_{n+1} = x_n + δx
+y_{n+1} = y_n + δy
+δx, δy ~ N(0, σ²)
+```
+
+**Physical Meaning:**
+- Models diffusion processes
+- Mean square displacement: ⟨r²⟩ ~ t
+- Demonstrates Brownian motion
+
+---
+
+#### **Langevin Dynamics**
+*Particle motion in viscous medium with thermal fluctuations*
+
+**Equation:**
+```
+m(dv/dt) = -γv + F(r) + √(2γk_B·T)·ξ(t)
+```
+where γ (friction), F(r) (deterministic force), ξ(t) (white noise)
+
+**Overdamped Limit:**
+```
+dr/dt = μF(r) + √(2D)·ξ(t)
+```
+where D = k_B·T/γ (diffusion coefficient), μ = 1/γ (mobility)
+
+---
+
+#### **Boltzmann Distribution**
+*Thermal equilibrium in harmonic potential*
+
+**Potential:**
+```
+U(x, y) = k(x² + y²)/2
+```
+
+**Distribution:**
+```
+P(x, y) ∝ exp(-U(x,y)/(k_B·T))
+P(x, y) ∝ exp(-k(x² + y²)/(2k_B·T))
+```
+
+**Result:** Gaussian distribution with σ² = k_B·T/k
+
+**Applications:** Optical tweezers, ion traps, harmonic oscillators
+
+---
+
+#### **Attraction / Repulsion**
+*Boltzmann distribution with interacting potential*
+
+**Repulsion Potential:**
+```
+U(r) = Σ_i ε(σ/|r - r_i|)¹²
+```
+Lennard-Jones repulsion term only
+
+**Attraction Potential:**
+```
+U(r) = -Σ_i ε·exp(-(|r - r_i|²)/(2σ²))
+```
+
+**Distribution:**
+```
+P(r) ∝ exp(-U(r)/(k_B·T))
+```
+
+**Method:** Rejection sampling (Monte Carlo)
+
+**Effects:**
+- Repulsion: Excluded volume, uniform spacing
+- Attraction: Clustering, high-density regions
+
+---
+
+#### **Crystallization (Hexagonal/Square Lattice)**
+*Ordered crystal structures with thermal vibrations*
+
+**Hexagonal Basis:**
+```
+a₁ = (1, 0)
+a₂ = (1/2, √3/2)
+```
+
+**Square Basis:**
+```
+a₁ = (1, 0)
+a₂ = (0, 1)
+```
+
+**Lattice Sites:**
+```
+r = n₁·a₁ + n₂·a₂,  n₁, n₂ ∈ ℤ
+```
+
+**Properties:**
+- Long-range order
+- Translational symmetry
+- Minimum potential energy
+- Applications: Graphene (hex), ionic crystals (square)
+
+---
+
+#### **Koch Snowflake**
+*Recursive fractal via line segment subdivision*
+
+**Construction:**
+1. Start with equilateral triangle
+2. Divide each segment into three parts
+3. Replace middle segment with two sides of equilateral triangle
+4. Repeat recursively
+
+**After n iterations:**
+```
+L_n = L₀·(4/3)ⁿ
+N_n = 3·4ⁿ (number of segments)
+```
+
+**Properties:**
+- Fractal dimension: D = ln(4)/ln(3) ≈ 1.262
+- Perimeter → ∞, finite area
+
+---
+
+#### **Barnsley Fern**
+*Iterated Function System (IFS)*
+
+**Affine Transformations:**
+```
+f₁: [x, y] → [0, 0.16y]                           (p=0.01) stem
+f₂: [x, y] → [0.85x + 0.04y, -0.04x + 0.85y + 1.6]  (p=0.85) main body
+f₃: [x, y] → [0.20x - 0.26y, 0.23x + 0.22y + 1.6]   (p=0.07) left branch
+f₄: [x, y] → [-0.15x + 0.28y, 0.26x + 0.24y + 0.44] (p=0.07) right branch
+```
+
+**Algorithm:**
+1. Start at (0, 0)
+2. Randomly select transformation by probability
+3. Apply transformation
+4. Repeat
+
+**Result:** Detailed fern-like natural structure
+
+---
+
+#### **Julia Set**
+*Complex dynamics and chaotic iterations*
+
+**Iteration:**
+```
+z_{n+1} = z_n² + c
+```
+where c is a fixed complex parameter (e.g., c = -0.7 + 0.27015i)
+
+**Classification:**
+- Point z₀ ∈ Julia set if sequence {z_n} remains bounded
+- Escape criterion: |z_n| > R (typically R = 2)
+
+**Generation:**
+1. Pick random point in complex plane
+2. Iterate mapping
+3. If sequence doesn't escape in N iterations → save point
+
+**Properties:**
+- Fractal boundary
+- Self-similarity
+- Chaotic dynamics
+- Dimension D ∈ [1, 2)
+
+---
+
+#### **Pythagoras Tree**
+*Recursive construction with squares on right triangles*
+
+**Algorithm:**
+1. Start with base square
+2. Construct right triangle on top edge
+3. Build two smaller squares on the legs
+4. Recursively repeat for new squares
+
+**For isosceles triangle (45°-45°-90°):**
+```
+Scale = 1/√2 per level
+Rotation angle = ±45°
+```
+
+**Properties:**
+- Recursive structure
+- Self-similarity
+- Resembles tree branching
+
+---
+
+#### **Clusters**
+*Spatially heterogeneous Gaussian distributions*
+
+**Mathematical Description:**
+```
+Cluster centers: C_i = (x_i, y_i), i = 1..k
+Points around center j:
+x ~ N(x_j, σ²)
+y ~ N(y_j, σ²)
+```
+
+**Parameters:**
+- Number of clusters: k
+- Variance: σ (controls cluster size)
+
+**Applications:** Spatial heterogeneity, k-means-like structures
+
+---
 
 ## 🛠️ Architecture
 
-### 🏗️ Core Components
+### 🏗️ Project Structure
 
 ```
 StatPhys/
 ├── tests/
 │   ├── main.py                      # PyQt6 GUI application
 │   ├── strategies.py                # Algorithm implementations
-│   ├── ...png                       # presets for visualization
-├── .venv/                          # Virtual environment
-├── requirements.txt                # Python dependencies
-├── statphys.spec                   # PyInstaller config (macOS)
-├── statphys_windows.spec           # PyInstaller config (Windows)
-├── build_macos.sh                  # macOS build script
-├── build_windows.bat               # Windows build script
-├── CLAUDE.md                       # Development guidelines
-└── README.md                       # This file
+│   ├── *.png, *.jpg                 # Logos and preset images
+├── .github/
+│   ├── workflows/
+│   │   └── build.yml                # CI/CD pipeline
+│   └── ACTIONS_README.md            # GitHub Actions documentation
+├── .venv/                           # Virtual environment
+├── requirements.txt                 # Python dependencies
+├── statphys.spec                    # PyInstaller config (macOS)
+├── statphys_linux.spec              # PyInstaller config (Linux)
+├── statphys_windows.spec            # PyInstaller config (Windows)
+├── build_all.sh                     # macOS/Linux build script
+├── build_all.ps1                    # Windows build script
+├── CLAUDE.md                        # Development guidelines
+└── README.md                        # This file
 ```
 
 ### 🎭 Strategy Pattern
 
 All algorithms implement a unified interface:
+
 ```python
 class Strategy:
     def generate(self, n: int) -> np.ndarray:
         """Generate n points in [0,1]² space"""
-        pass
+        return points  # shape (n, 2)
 
     def get_correct_visualization(self, ax) -> None:
         """Enhanced visualization (optional)"""
         pass
 ```
 
-### 🎨 GUI Integration
+This design allows easy addition of new strategies without modifying the GUI code.
 
-- **Strategy Selection**: Dropdown with 11 algorithms
-- **Parameter Control**: Difficulty affects point density
-- **Real-time Rendering**: Matplotlib canvas integration
-- **Answer System**: Enhanced visualizations on demand
+---
 
-## 🔧 Development
-
-### 🏃‍♂️ Running Tests
-```bash
-cd tests
-python main.py  # Interactive testing via GUI
-```
-
-### 🎯 Adding New Strategies
-
-1. **Implement** the strategy class in `strategies.py`
-2. **Import** in `main.py`
-3. **Add** to strategy dropdown
-4. **Integrate** in `generate_points()` method
-
-Example:
-```python
-class NewStrategy:
-    def generate(self, n):
-        # Your algorithm here
-        return np.random.rand(n, 2)  # Must return (n,2) array
-```
-
-## 📚 Educational Value
+## 🧪 Educational Value
 
 ### 🎓 Learning Objectives
-- **Statistical Mechanics**: Phase transitions, correlation functions
-- **Fractal Geometry**: Self-similarity, dimension theory
-- **Computational Physics**: Monte Carlo methods, numerical integration
-- **Complex Systems**: Emergence, pattern formation
 
-### 🧪 Research Applications
-- **Materials Science**: Spin systems, phase diagrams
-- **Mathematics**: Dynamical systems, chaos theory
-- **Computer Graphics**: Procedural generation, natural patterns
-- **Data Science**: Clustering algorithms, dimensionality reduction
+- **Statistical Mechanics**: Phase transitions, equilibrium distributions, correlation functions
+- **Fractal Geometry**: Self-similarity, fractal dimensions, recursive algorithms
+- **Computational Physics**: Monte Carlo methods, numerical integration, rejection sampling
+- **Stochastic Processes**: Random walks, Langevin equations, diffusion
+- **Complex Systems**: Emergence, pattern formation, critical phenomena
+
+### 📖 Research Applications
+
+- **Materials Science**: Spin systems, magnetic materials, phase diagrams
+- **Mathematics**: Dynamical systems, chaos theory, complex analysis
+- **Computer Graphics**: Procedural generation, natural patterns, textures
+- **Data Science**: Clustering algorithms, spatial statistics, point processes
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how you can help:
+Contributions are welcome! Here's how:
 
-1. **🐛 Report Issues**: Found a bug? Let us know!
+1. **🐛 Report Issues**: Found a bug? Open an issue!
 2. **💡 Suggest Features**: New algorithms or visualizations
 3. **📖 Improve Docs**: Help others understand the code
 4. **🔧 Submit PRs**: Code improvements and new strategies
 
-### 🏗️ Development Setup
-```bash
-git clone https://github.com/yourusername/StatPhys.git
-cd StatPhys
-python -m venv .venv
-source .venv/bin/activate
-pip install PyQt6 matplotlib numpy scipy
-```
+---
+
+## 📚 References
+
+1. Landau L.D., Lifshitz E.M. *Statistical Physics*. Nauka, 1976.
+2. Newman M.E.J., Barkema G.T. *Monte Carlo Methods in Statistical Physics*. Oxford University Press, 1999.
+3. Mandelbrot B.B. *The Fractal Geometry of Nature*. W.H. Freeman, 1982.
+4. Gardiner C.W. *Handbook of Stochastic Methods*. Springer, 2004.
+5. Peitgen H.-O., Jürgens H., Saupe D. *Chaos and Fractals*. Springer, 2004.
+
+---
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source and available for educational and research purposes.
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -305,8 +577,10 @@ This project is open source and available under the [MIT License](LICENSE).
 
 <div align="center">
 
-**Made with ❤️ for science and education**
+**Developed at Lomonosov Moscow State University**
+*Faculty of Computational Mathematics and Cybernetics*
+*Department of Mathematical Methods of Forecasting*
 
-*Star ⭐ this repo if you find it useful!*
+**Made with ❤️ for science and education**
 
 </div>

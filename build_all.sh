@@ -62,18 +62,18 @@ if [ "$OS" == "macos" ]; then
         # Создаем ZIP (основной формат)
         echo "📦 Создание ZIP..."
         cd dist
-        zip -r ../apps/StatPhys-macos-x64.zip StatPhys.app
+        zip -r ../apps/Random_points-macos-x64.zip StatPhys.app
         cd ..
 
         echo "✅ Сборка завершена!"
-        echo "   ZIP: apps/StatPhys-macos-x64.zip"
+        echo "   ZIP: apps/Random_points-macos-x64.zip"
 
         # Опционально: создаем DMG (может не хватить места на CI)
         if command -v hdiutil &> /dev/null; then
             echo ""
             echo "📦 Создание DMG (опционально)..."
-            if hdiutil create -volname "StatPhys" -srcfolder dist/StatPhys.app -ov -format UDZO apps/StatPhys-macos-x64.dmg 2>/dev/null; then
-                echo "   DMG: apps/StatPhys-macos-x64.dmg"
+            if hdiutil create -volname "Random Points" -srcfolder dist/StatPhys.app -ov -format UDZO apps/Random_points-macos-x64.dmg 2>/dev/null; then
+                echo "   DMG: apps/Random_points-macos-x64.dmg"
             else
                 echo "⚠️  DMG не создан (возможно нехватка места)"
             fi
@@ -93,11 +93,11 @@ elif [ "$OS" == "linux" ]; then
         # Создаем tar.gz
         echo "📦 Создание архива..."
         cd dist
-        tar -czf ../apps/StatPhys-linux-x64.tar.gz StatPhys
+        tar -czf ../apps/Random_points-linux-x64.tar.gz StatPhys
         cd ..
 
         echo "✅ Сборка завершена!"
-        echo "   Архив: apps/StatPhys-linux-x64.tar.gz"
+        echo "   Архив: apps/Random_points-linux-x64.tar.gz"
     else
         echo "❌ Ошибка сборки"
         exit 1

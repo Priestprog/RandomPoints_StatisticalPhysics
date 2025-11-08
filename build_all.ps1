@@ -59,10 +59,10 @@ if (Test-Path "dist\StatPhys.exe") {
 
     # Создаем ZIP
     Write-Host "📦 Создание архива..." -ForegroundColor Yellow
-    Compress-Archive -Path dist\StatPhys.exe -DestinationPath apps\StatPhys-windows-x64.zip -Force
+    Compress-Archive -Path dist\StatPhys.exe -DestinationPath apps\Random_points-windows-x64.zip -Force
 
     Write-Host "✅ Сборка завершена!" -ForegroundColor Green
-    Write-Host "   ZIP: apps\StatPhys-windows-x64.zip" -ForegroundColor Cyan
+    Write-Host "   ZIP: apps\Random_points-windows-x64.zip" -ForegroundColor Cyan
 } else {
     Write-Host "❌ Ошибка: исполняемый файл не найден" -ForegroundColor Red
     exit 1
