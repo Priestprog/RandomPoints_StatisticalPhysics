@@ -31,10 +31,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -84,7 +84,7 @@ jobs:
         zip -r ../apps/StatPhys-macos-x64.zip StatPhys.app
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
         path: apps/*
@@ -98,18 +98,20 @@ jobs:
 
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        path: apps
+        path: artifacts
 
-    - name: Display structure of downloaded files
-      run: ls -R apps
+    - name: Prepare release files
+      run: |
+        mkdir -p release_files
+        find artifacts -type f -exec cp {} release_files/ \;
+        ls -la release_files/
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
-        files: |
-          apps/**/*
+        files: release_files/*
         draft: false
         prerelease: false
       env:
