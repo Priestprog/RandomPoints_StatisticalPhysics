@@ -896,13 +896,21 @@ class GameWindow(QWidget):
             # Определяем режим: "Угадай" или "Отгадай"
             is_guess_mode = self.guess_radio.isChecked()
 
-            # Температура зависит от уровня сложности
+            # Температура для гексагональной кристаллизации зависит от уровня сложности
             if n >= 1000:  # Лёгкий
-                thermal_noise = 0.003
+                thermal_noise_hex = 0.002
             elif n >= 300:  # Средний
-                thermal_noise = 0.004
+                thermal_noise_hex = 0.003
             else:  # Сложный (n = 100)
-                thermal_noise = 0.005
+                thermal_noise_hex = 0.004
+
+            # Температура для квадратной кристаллизации зависит от уровня сложности
+            if n >= 1000:  # Лёгкий
+                thermal_noise_square = 0.002
+            elif n >= 300:  # Средний
+                thermal_noise_square = 0.005
+            else:  # Сложный (n = 100)
+                thermal_noise_square = 0.009
 
             # список всех остальных стратегий (кроме случайных точек) с их названиями
             other_strategies = [
@@ -910,9 +918,9 @@ class GameWindow(QWidget):
                 (ClustersStrategy(k=7), "Притяжение"),
                 (RepulsionStrategy(k=7), "Отталкивание"),
                 (BoltzmannStrategy(temperature=0.15), "Больцмана"),
-                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise), "Кристаллизация (гексагональная)"),
-                (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise), "Кристаллизация (квадратная)"),
-                (IsingStrategy(grid_size=100, T=1.8, J=1.0), "Изинг"),
+                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise_hex), "Кристаллизация (гексагональная)"),
+                (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise_square), "Кристаллизация (квадратная)"),
+                (IsingStrategy(grid_size=100, T=2.1, J=2.0), "Изинг"),
                 (RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2), "Случайное блуждание"),
                 (PythagorasTreeStrategy(depth=7), "Дерево Пифагора"),
                 (KochSnowflakeStrategy(iterations=5), "Снежинка Коха"),
@@ -929,13 +937,33 @@ class GameWindow(QWidget):
                 else:
                     strat, strategy_display_name = other_strategies[np.random.randint(len(other_strategies))]
                     self.current_strategy_name = strategy_display_name
-                    points = strat.generate(n)
+                    # Специальная обработка для Изинга
+                    if strategy_display_name == "Изинг":
+                        if difficulty == "Лёгкий":
+                            sample_fraction = 1.0  # 100% точек
+                        elif difficulty == "Средний":
+                            sample_fraction = 0.1  # 10% точек
+                        else:  # Сложный
+                            sample_fraction = 0.05  # 5% точек
+                        points = strat.generate(n=n, sample_fraction=sample_fraction)
+                    else:
+                        points = strat.generate(n)
             else:
                 # Режим "Отгадай": все стратегии равновероятны (включая случайные точки)
                 all_strategies = [(UniformStrategy(), "Случайные точки")] + other_strategies
                 strat, strategy_display_name = all_strategies[np.random.randint(len(all_strategies))]
                 self.current_strategy_name = strategy_display_name
-                points = strat.generate(n)
+                # Специальная обработка для Изинга
+                if strategy_display_name == "Изинг":
+                    if difficulty == "Лёгкий":
+                        sample_fraction = 1.0  # 100% точек
+                    elif difficulty == "Средний":
+                        sample_fraction = 0.1  # 10% точек
+                    else:  # Сложный
+                        sample_fraction = 0.05  # 5% точек
+                    points = strat.generate(n=n, sample_fraction=sample_fraction)
+                else:
+                    points = strat.generate(n)
 
         # Сохраняем стратегию
         self.current_strategy = strat
