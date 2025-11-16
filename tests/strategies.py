@@ -132,7 +132,7 @@ class BoltzmannStrategy:
                    arrowprops=dict(arrowstyle='->', lw=3, color='black'),
                    fontsize=20, fontweight='bold', ha='center')
 
-        ax.set_title(f'Распределение Больцмана (T={self.temperature:.2f})',
+        ax.set_title(f'Гравитация (T={self.temperature:.2f})',
                     fontsize=12, pad=10)
         ax.set_aspect('equal')
         ax.set_xlim(0, 1)

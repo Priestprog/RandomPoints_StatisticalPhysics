@@ -149,7 +149,7 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Эффект:</b> Точки избегают близкого расположения друг к другу, создавая более равномерное распределение.</p>
         """,
 
-        "Больцмана": f"""
+        "Гравитация": f"""
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Генерация согласно распределению Больцмана в гармоническом потенциале.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Потенциал:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
@@ -618,7 +618,7 @@ class GameWindow(QWidget):
             "Треугольник Серпинского",
             "Притяжение",
             "Отталкивание",
-            "Больцмана",
+            "Гравитация",
             "Кристаллизация (гексагон.)",
             "Кристаллизация (квадрат.)",
             "Изинг",
@@ -665,7 +665,7 @@ class GameWindow(QWidget):
         self._on_strategy_changed(self.strategy_combo.currentText())
 
         # слайдер для скорости анимации (интервал между обновлениями в мс)
-        self.speed_label = QLabel("Скорость анимации: 50 мс")
+        self.speed_label = QLabel("Скорость: 50 мс")
         self.speed_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setMinimum(10)
@@ -769,10 +769,12 @@ class GameWindow(QWidget):
 
     def _on_speed_changed(self, value):
         """Обработчик изменения скорости анимации"""
-        self.speed_label.setText(f"Скорость анимации: {value} мс")
+        # Инвертируем значение: 10->1000, 1000->10
+        inverted_value = 1010 - value
+        self.speed_label.setText(f"Скорость: {inverted_value} мс")
         # Если анимация идёт, изменяем интервал таймера
         if self.is_animating:
-            self.animation_timer.setInterval(value)
+            self.animation_timer.setInterval(inverted_value)
 
     def _on_points_per_step_changed(self, value):
         """Обработчик изменения количества точек за шаг"""
@@ -822,9 +824,9 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Отталкивание"
             points = strat.generate(n)
 
-        elif strategy_name == "Больцмана":
+        elif strategy_name == "Гравитация":
             strat = BoltzmannStrategy(temperature=0.15)
-            self.current_strategy_name = "Больцмана"
+            self.current_strategy_name = "Гравитация"
             points = strat.generate(n)
 
         elif strategy_name == "Кристаллизация (гексагон.)":
@@ -917,7 +919,7 @@ class GameWindow(QWidget):
                 (SierpinskiStrategy(), "Треугольник Серпинского"),
                 (ClustersStrategy(k=7), "Притяжение"),
                 (RepulsionStrategy(k=7), "Отталкивание"),
-                (BoltzmannStrategy(temperature=0.15), "Больцмана"),
+                (BoltzmannStrategy(temperature=0.15), "Гравитация"),
                 (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise_hex), "Кристаллизация (гексагональная)"),
                 (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise_square), "Кристаллизация (квадратная)"),
                 (IsingStrategy(grid_size=100, T=2.1, J=2.0), "Изинг"),
@@ -969,7 +971,8 @@ class GameWindow(QWidget):
         self.current_strategy = strat
 
         # Получаем параметры анимации из слайдеров
-        animation_interval = self.speed_slider.value()  # интервал в мс
+        slider_value = self.speed_slider.value()
+        animation_interval = 1010 - slider_value  # инвертируем значение
         step = self.points_per_step_slider.value()  # количество точек за шаг
         point_size = self.point_size_slider.value()  # размер точек
 
