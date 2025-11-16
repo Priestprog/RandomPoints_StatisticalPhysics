@@ -420,8 +420,7 @@ class RepulsionStrategy:
 
             # Показываем центры отталкивания с кругами исключённой зоны
             circle = plt.Circle(center, 0.08, color=color, fill=True,
-                               linewidth=2, alpha=0.15,
-                               label=f'Центр {i+1}')
+                               linewidth=2, alpha=0.15)
             ax.add_patch(circle)
             # Внешний контур
             circle_outline = plt.Circle(center, 0.08, color=color, fill=False,
@@ -437,8 +436,6 @@ class RepulsionStrategy:
         ax.set_yticks([])
         for spine in ax.spines.values():
             spine.set_visible(False)
-        # Легенда внутри графика, чтобы не обрезать правый край
-        ax.legend(loc='upper right', fontsize=8, framealpha=0.7)
 
 
 class ClustersStrategy:
@@ -503,7 +500,7 @@ class ClustersStrategy:
         for i, center in enumerate(self.centers):
             cluster = center + 0.08*np.random.randn(n//self.k, 2)
             color = colors[i % len(colors)]
-            ax.scatter(cluster[:, 0], cluster[:, 1], s=point_size, color=color, alpha=0.7, label=f'Центр {i+1}')
+            ax.scatter(cluster[:, 0], cluster[:, 1], s=point_size, color=color, alpha=0.7)
             # показываем центры притяжения
             ax.scatter(center[0], center[1], s=50, color='black', marker='x')
 
@@ -514,8 +511,6 @@ class ClustersStrategy:
         ax.set_yticks([])
         for spine in ax.spines.values():
             spine.set_visible(False)
-        # Легенда внутри графика, чтобы не обрезать правый край
-        ax.legend(loc='upper right', fontsize=8, framealpha=0.7)
 
 
 # === Стратегии из статистической физики ===
