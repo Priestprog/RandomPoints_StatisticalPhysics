@@ -559,6 +559,7 @@ class GameWindow(QWidget):
         self.animation_index = 0
         self.animation_step = 1
         self.is_animating = False
+        self.is_paused = False
 
     def init_ui(self):
         # --- GUI: горизонтальная компоновка ---
@@ -596,7 +597,7 @@ class GameWindow(QWidget):
         left_panel.setMinimumWidth(250)
         left_panel.setMaximumWidth(350)
         left_layout = QVBoxLayout(left_panel)
-        left_layout.setSpacing(int(5 * SCALE))  # Уменьшаем расстояние между элементами
+        left_layout.setSpacing(3)  # Уменьшаем расстояние между элементами
         left_layout.setContentsMargins(int(5 * SCALE), int(5 * SCALE), int(5 * SCALE), int(5 * SCALE))  # Уменьшаем отступы
 
         # выбор уровня сложности
@@ -712,6 +713,14 @@ class GameWindow(QWidget):
         self.gen_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
         left_layout.addWidget(self.gen_button)
 
+        # кнопка паузы
+        self.pause_button = QPushButton("Пауза")
+        self.pause_button.clicked.connect(self.toggle_pause)
+        self.pause_button.setEnabled(False)  # изначально недоступна
+        self.pause_button.setMinimumHeight(int(35 * SCALE))
+        self.pause_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
+        left_layout.addWidget(self.pause_button)
+
         # кнопка показа правильного ответа
         self.answer_button = QPushButton("Ответ")
         self.answer_button.clicked.connect(self.show_correct_answer)
@@ -765,6 +774,19 @@ class GameWindow(QWidget):
             self.random_mode_label.hide()
             self.guess_radio.hide()
             self.identify_radio.hide()
+
+    def toggle_pause(self):
+        """Переключает паузу анимации"""
+        if self.is_paused:
+            # Возобновляем анимацию
+            self.is_paused = False
+            self.animation_timer.start()
+            self.pause_button.setText("Пауза")
+        else:
+            # Ставим на паузу
+            self.is_paused = True
+            self.animation_timer.stop()
+            self.pause_button.setText("Продолжить")
 
     def _on_speed_changed(self, value):
         """Обработчик изменения скорости анимации"""
@@ -1000,9 +1022,12 @@ class GameWindow(QWidget):
         self.animation_index = 0
         self.animation_step = step
         self.is_animating = True
+        self.is_paused = False
 
-        # Активируем кнопку ответа
+        # Активируем кнопки ответа и паузы
         self.answer_button.setEnabled(True)
+        self.pause_button.setEnabled(True)
+        self.pause_button.setText("Пауза")
 
         # Запускаем таймер
         self.animation_timer.start(interval)
@@ -1062,6 +1087,9 @@ class GameWindow(QWidget):
         if self.animation_index >= len(self.current_points):
             self.animation_timer.stop()
             self.is_animating = False
+            self.is_paused = False
+            self.pause_button.setEnabled(False)
+            self.pause_button.setText("Пауза")
 
     def show_correct_answer(self):
         # Останавливаем анимацию, если она идёт
