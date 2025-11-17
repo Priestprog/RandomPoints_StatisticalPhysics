@@ -300,7 +300,7 @@ class CrystallizationStrategy:
                   edgecolors='white', linewidths=0.5, zorder=2)
 
         # Заголовок строго по центру
-        lattice_name = 'Гексагональная' if self.lattice_type == 'hexagonal' else 'Квадратная'
+        lattice_name = 'Треугольная' if self.lattice_type == 'hexagonal' else 'Квадратная'
         ax.set_title(f'{lattice_name} решётка (ΔT={self.thermal_noise:.3f})',
                     fontsize=12, pad=10, loc='center', ha='center')
 

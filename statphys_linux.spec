@@ -11,7 +11,7 @@ a = Analysis(
         ('tests/logo-mgu.png', '.'),
         ('tests/logo_mmp.png', '.'),
         ('tests/bagrov.png', '.'),
-        ('tests/lukanov.jpg', '.'),
+        ('tests/churilov.jpg', '.'),
         ('tests/chichigina.jpg', '.'),
         ('tests/Треугольник_Серпинского.png', '.'),
         ('tests/Снежинка_Коха.png', '.'),

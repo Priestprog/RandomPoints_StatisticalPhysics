@@ -164,9 +164,9 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Применение:</b> Моделирование термического равновесия в гармонической ловушке (оптические пинцеты, ионные ловушки).</p>
         """,
 
-        "Кристаллизация (гексагональная)": f"""
+        "Кристаллизация (треугольная)": f"""
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Моделирование роста кристаллических решеток.</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Базис гексагональной решётки:</b></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Базис треугольной решётки:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 a<sub>1</sub> = (1, 0)<br>
                 a<sub>2</sub> = (1/2, √3/2)
@@ -619,7 +619,7 @@ class GameWindow(QWidget):
             "Притяжение",
             "Отталкивание",
             "Гравитация",
-            "Кристаллизация (гексагон.)",
+            "Кристаллизация (треуг.)",
             "Кристаллизация (квадрат.)",
             "Изинг",
             "Случайное блуждание",
@@ -850,7 +850,7 @@ class GameWindow(QWidget):
             self.current_strategy_name = "Гравитация"
             points = strat.generate(n)
 
-        elif strategy_name == "Кристаллизация (гексагон.)":
+        elif strategy_name == "Кристаллизация (треуг.)":
             # Температура зависит от уровня сложности
             if n >= 1000:  # Лёгкий
                 thermal_noise = 0.002
@@ -859,7 +859,7 @@ class GameWindow(QWidget):
             else:  # Сложный (n = 100)
                 thermal_noise = 0.004
             strat = CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise)
-            self.current_strategy_name = "Кристаллизация (гексагональная)"
+            self.current_strategy_name = "Кристаллизация (треугольная)"
             points = strat.generate(n)
 
         elif strategy_name == "Кристаллизация (квадрат.)":
@@ -941,7 +941,7 @@ class GameWindow(QWidget):
                 (ClustersStrategy(k=7), "Притяжение"),
                 (RepulsionStrategy(k=7), "Отталкивание"),
                 (BoltzmannStrategy(temperature=0.15), "Гравитация"),
-                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise_hex), "Кристаллизация (гексагональная)"),
+                (CrystallizationStrategy(lattice_type='hexagonal', thermal_noise=thermal_noise_hex), "Кристаллизация (треугольная)"),
                 (CrystallizationStrategy(lattice_type='square', thermal_noise=thermal_noise_square), "Кристаллизация (квадратная)"),
                 (IsingStrategy(grid_size=100, T=2.1, J=2.0), "Изинг"),
                 (RandomWalkRepulsionStrategy(step_size=0.12, repulsion_strength=0.2), "Случайное блуждание"),
