@@ -732,18 +732,18 @@ class RandomWalkRepulsionStrategy:
             # Показываем границы графика более явно
             ax.plot([0, 1, 1, 0, 0], [0, 0, 1, 1, 0], 'r-', linewidth=2, alpha=0.5, label='Границы')
 
-            # Показываем траекторию как линию
-            ax.plot(self.trajectory[:, 0], self.trajectory[:, 1], 'b-', alpha=0.5, linewidth=1.5)
+            # Показываем траекторию как линию (только первые 10 точек)
+            ax.plot(self.trajectory[:20, 0], self.trajectory[:20, 1], 'b-', alpha=0.5, linewidth=1.5)
 
-            # Точки с градиентом цвета по времени
-            colors = np.linspace(0, 1, len(self.trajectory))
-            ax.scatter(self.trajectory[:, 0], self.trajectory[:, 1], c=colors, cmap='plasma', s=point_size)
+            # Точки с градиентом цвета по времени (только первые 10 точек)
+            colors = np.linspace(0, 1, 20)
+            ax.scatter(self.trajectory[:20, 0], self.trajectory[:20, 1], c=colors, cmap='plasma', s=point_size)
 
             # Начальная точка
             ax.scatter(self.trajectory[0, 0], self.trajectory[0, 1], c='green', s=50, marker='o', label='Старт')
 
             # Конечная точка
-            ax.scatter(self.trajectory[-1, 0], self.trajectory[-1, 1], c='red', s=50, marker='s', label='Финиш')
+            ax.scatter(self.trajectory[19, 0], self.trajectory[19, 1], c='red', s=50, marker='s', label='Финиш')
 
             ax.set_title(f'Случайное блуждание (шаг={self.step_size:.2f})',
                         fontsize=12, pad=10)

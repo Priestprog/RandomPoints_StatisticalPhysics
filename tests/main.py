@@ -470,13 +470,12 @@ class AuthorsScreen(QWidget):
         authors_photos_layout.addLayout(author1_container)
         authors_photos_layout.addSpacing(80)
 
-        # Автор 2: Лукьянов Артём
         author2_container = QVBoxLayout()
         author2_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Фото автора 2
         photo2 = QLabel()
-        photo2_path = Path(__file__).parent / "lukanov.jpg"
+        photo2_path = Path(__file__).parent / "churilov.jpg"
         if photo2_path.exists():
             pixmap2 = QPixmap(str(photo2_path))
             if not pixmap2.isNull():
@@ -490,7 +489,7 @@ class AuthorsScreen(QWidget):
         author2_container.addSpacing(20)
 
         # Текст автора 2
-        name2 = QLabel("Лукьянов Артём\nВасильевич")
+        name2 = QLabel("Чурилов Даниил\nИгоревич")
         name2.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         name2.setAlignment(Qt.AlignmentFlag.AlignCenter)
         author2_container.addWidget(name2)
