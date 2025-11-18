@@ -108,59 +108,68 @@ def get_strategy_description(strategy_name):
         """,
 
         "Треугольник Серпинского": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Фрактальная структура, получаемая методом "игры в хаос".</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Фрактальная структура, которая строится итеративным случайным алгоритмом..</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Алгоритм:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">1. Заданы три вершины равностороннего треугольника</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Случайная начальная точка</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. На каждом шаге: выбрать случайную вершину и переместиться на половину расстояния к ней</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Случайная начальная точка P<sub>0</sub></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Для каждой точки: выбрать одну из вершин и переместиться на середину отрезка между текущей точкой и выбранной вершиной</p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                P<sub>n+1</sub> = (P<sub>n</sub> + V<sub>i</sub>) / 2
+                P<sub>n+1</sub>(x<sub>n+1</sub>, y<sub>n+1</sub>) = (P<sub>n</sub>(x<sub>n</sub>, y<sub>n</sub>) + V<sub>i</sub>(x<sub>i</sub>, y<sub>i</sub>)) / 2
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где V<sub>i</sub> — случайно выбранная вершина</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где V<sub>i</sub> — случайно выбранная вершина, P<sub>n</sub> - координаты точки на шаге n, (x, y) — сами координаты.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Фрактальная размерность:</b> D = ln(3)/ln(2) ≈ 1.585</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Самоподобие на всех масштабах. Детерминированная фрактальная структура, получаемая стохастическим методом.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Выбор вершины на каждом шаге происходит случайно. Вычисление координат середины отрезка происходит детерминированно. После многих итераций точки образуют детерминированную фрактальную структуру, несмотря на случайный процесс генерации.</p>
         """,
 
         "Притяжение": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Распределение Больцмана с притягивающим потенциалом.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Распределение Больцмана, где точки притягиваются к центрам.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Потенциал:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                U(r) = -Σ<sub>i</sub> ε exp(-(|r - r<sub>i</sub>|²)/(2σ²))
+                U(r) = -Σ<sub>i</sub> g ⋅ exp(-(|r - r<sub>i</sub>|²)/(2R²))
             </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где r — координата текущей точки, r<sub>i</sub> — координата i-го центра притяжения, g — сила притяжения, R - радиус влияния центра.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Распределение Больцмана:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 P(r) ∝ exp(-U(r)/(k<sub>B</sub>T))
             </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Генерация точек:</b></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">1. Задаются центры притяжения r<sub>i</sub></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Новая точка появляется в позиции r с вероятностью P(r)</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Эффект:</b> Точки стремятся образовывать плотные кластеры вокруг центров притяжения.</p>
         """,
 
         "Отталкивание": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Распределение Больцмана с отталкивающим потенциалом.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Точки отталкиваются друг от друга, создавая равномерное распределение.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Потенциал:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 U(r) = Σ<sub>i</sub> u(|r - r<sub>i</sub>|)<br>
                 u(d) = ε(σ/d)¹²
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Леннард-Джонс, только отталкивание</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Метод генерации:</b> Rejection sampling</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где r — координата текущей точки, r<sub>i</sub> — координата i-ой существующей точки, d — расстояние между точками, ε — сила отталкивания, σ — характерный размер.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Метод генерации:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">1. Предложить случайную точку r</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Вычислить U(r)</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Принять с вероятностью P = exp(-U(r)/(k<sub>B</sub>T))</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Эффект:</b> Точки избегают близкого расположения друг к другу, создавая более равномерное распределение.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Вычислить суммарный потенциал отталкивания U(r) от всех существующих точек</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Принимаем точку с вероятностью P = exp(-U(r)/(k<sub>B</sub>T))</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Эффект:</b> Минимизация перекрытия точек, равномерное заполнение пространства.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Здесь расчет потенциала отталкивания от существующих точек U(r) — детерминирован, а процесс выбора позиции точки и финальное решение о принятии точки — случаен.</p>
         """,
 
         "Больцмана": f"""
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Генерация согласно распределению Больцмана в гармоническом потенциале.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Потенциал:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                U(x, y) = k(x² + y²)/2
+                U(y) = mgy
             </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где y — высота, mg — сила тяжести</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Распределение:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                P(x, y) ∝ exp(-U(x,y)/(k<sub>B</sub>T))<br>
-                P(x, y) ∝ exp(-k(x² + y²)/(2k<sub>B</sub>T))
+                P(y) ∝ exp(-mgy/(k<sub>B</sub>T))
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Результат:</b> Нормальное распределение с σ² = k<sub>B</sub>T/k</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где y — высота, mg — сила тяжести, k<sub>B</sub>T — тепловая энергия</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Метод генерации:</b></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">1. Координата x выбирается равномерно случайно</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Координата y выбирается согласно распределению P(y)</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Результат:</b> Плотность точек экспоненциально убывает с высотой. Обе координаты генерируются случайно, а распределение по y следует закону Больцмана</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Применение:</b> Моделирование термического равновесия в гармонической ловушке (оптические пинцеты, ионные ловушки).</p>
         """,
 
@@ -168,13 +177,14 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Моделирование роста кристаллических решеток.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Базис гексагональной решётки:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                a<sub>1</sub> = (1, 0)<br>
-                a<sub>2</sub> = (1/2, √3/2)
+                a<sub>1</sub> = (1, 0) — основной шаг по горизонтали<br>
+                a<sub>2</sub> = (1/2, √3/2) — смещенный шаг под углом 60°
             </p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Узлы решетки:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 r = n<sub>1</sub>a<sub>1</sub> + n<sub>2</sub>a<sub>2</sub>, n<sub>1</sub>, n<sub>2</sub> ∈ ℤ
             </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где n<sub>1</sub>, n<sub>2</sub> — целые числа.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Применение:</b> Графен, соты, некоторые молекулярные кристаллы.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Свойства:</b> Дальний порядок, периодичность, минимум потенциальной энергии, симметрия трансляций.</p>
         """,
@@ -183,13 +193,14 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Моделирование роста кристаллических решеток.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Базис квадратной решётки:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
-                a<sub>1</sub> = (1, 0)<br>
-                a<sub>2</sub> = (0, 1)
+                a<sub>1</sub> = (1, 0) — единичный шаг по горизонтали<br>
+                a<sub>2</sub> = (0, 1) — единичный шаг по вертикали
             </p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Узлы решетки:</b></p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 r = (n<sub>1</sub>, n<sub>2</sub>), n<sub>1</sub>, n<sub>2</sub> ∈ ℤ
             </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Диагонали на графике:</b> Визуализация связей между ближайшими соседями в решетке.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Применение:</b> Простые кубические решетки, ионные кристаллы.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Свойства:</b> Дальний порядок, периодичность, минимум потенциальной энергии, симметрия трансляций.</p>
         """,
@@ -201,14 +212,14 @@ def get_strategy_description(strategy_name):
                 H = -J Σ<sub>⟨i,j⟩</sub> s<sub>i</sub>s<sub>j</sub>
             </p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где s<sub>i</sub> = ±1 — спины на узлах решетки, J > 0 — константа обменного взаимодействия, ⟨i,j⟩ — суммирование по ближайшим соседям</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Алгоритм Метрополиса:</b></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Алгоритм генерации состояний:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">1. Случайно выбрать спин</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Вычислить изменение энергии при переворачивании: ΔE</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Принять с вероятностью P = min(1, exp(-ΔE/(k<sub>B</sub>T)))</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Температурные режимы:</b></p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• T ≪ T<sub>c</sub>: Упорядоченное состояние (ферромагнитная фаза)</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• T ≈ T<sub>c</sub>: Критическая область (флуктуации на всех масштабах)</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• T ≫ T<sub>c</sub>: Неупорядоченное состояние (парамагнитная фаза)</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• T ≪ T<sub>c</sub>: Упорядоченное состояние (одинаковые спины)</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• T ≈ T<sub>c</sub>: Критическая область (хаотическая структура)</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• T ≫ T<sub>c</sub>: Неупорядоченное состояние (фазовый переход)</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Критическая температура</b> (2D): T<sub>c</sub> = 2J/(k<sub>B</sub> ln(1 + √2)) ≈ 2.269 J/k<sub>B</sub></p>
         """,
 
@@ -220,8 +231,8 @@ def get_strategy_description(strategy_name):
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 x<sub>n+1</sub> = x<sub>n</sub> + δx<br>
                 y<sub>n+1</sub> = y<sub>n</sub> + δy<br>
-                δx, δy ~ N(0, σ²)
             </p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где δx, δy — случайные смещения, определяемая по формуле нормального распределения.</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Физический смысл:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• Моделирует диффузию</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• Среднеквадратичное смещение: ⟨r²⟩ ~ t</p>
@@ -241,7 +252,8 @@ def get_strategy_description(strategy_name):
                 Масштаб = 1/√2 на каждом уровне<br>
                 Угол поворота = ±45°
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Свойства:</b> Рекурсивная структура, самоподобие, напоминает ветвление деревьев.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Свойства:</b> Рекурсивная структура (но в программе квадраты не бесконечны), самоподобие, напоминает ветвление деревьев.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Все координаты вычисляются по геометрическим формулам, а сами точки возникают как вершины квадратов и треугольников</p>
         """,
 
         "Снежинка Коха": f"""
@@ -251,6 +263,7 @@ def get_strategy_description(strategy_name):
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Каждый отрезок разделить на три части</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Средний сегмент заменить двумя сторонами равностороннего треугольника</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">4. Повторить рекурсивно</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">Таким образом новые точки возникают в точках деления отрезков (1/3 и 2/3 длины) и в вершинах новых треугольников</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Математическое описание:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">После n итераций:</p>
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
@@ -262,10 +275,10 @@ def get_strategy_description(strategy_name):
         """,
 
         "Папоротник Барнсли": f"""
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Система итерированных функций (IFS).</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Аффинные преобразования:</b></p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Принцип:</b> Система итерированных функций.</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Преобразования (аффинные):</b></p>
             <p style="font-size: {FORMULA_SMALL_SIZE}px; font-family: monospace; padding: 10px;">
-                f<sub>1</sub>: [x, y] → [0, 0.16y] &nbsp;&nbsp;&nbsp; (вероятность 0.01) — стебель<br>
+                f<sub>1</sub>: [x, y] → [0, 0.16y] &nbsp;&nbsp;&nbsp; (вероятность 0.01) — сжатие в стебель<br>
                 f<sub>2</sub>: [x, y] → [0.85x + 0.04y, -0.04x + 0.85y + 1.6] &nbsp; (0.85) — основная часть<br>
                 f<sub>3</sub>: [x, y] → [0.20x - 0.26y, 0.23x + 0.22y + 1.6] &nbsp; (0.07) — левая ветвь<br>
                 f<sub>4</sub>: [x, y] → [-0.15x + 0.28y, 0.26x + 0.24y + 0.44] &nbsp; (0.07) — правая ветвь
@@ -284,14 +297,14 @@ def get_strategy_description(strategy_name):
             <p style="text-align: center; font-family: monospace; font-size: {FORMULA_TEXT_SIZE}px; padding: 15px;">
                 z<sub>n+1</sub> = z<sub>n</sub>² + c
             </p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где c — фиксированный комплексный параметр (например, c = -0.7 + 0.27015i)</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">где z<sub>0</sub> — начальная точка, z<sub>n</sub> — последовательные положения точек после итераций, c — фиксированный комплексный параметр (например, c = -0.7 + 0.27015i), </p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Классификация точек:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• Точка z<sub>0</sub> принадлежит множеству Жюлиа, если последовательность {{z<sub>n</sub>}} ограничена</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">• Критерий ухода: |z<sub>n</sub>| > R (обычно R = 2)</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Генерация точек:</b></p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">1. Выбрать случайную точку в комплексной плоскости</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">2. Итерировать отображение</p>
-            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Если последовательность не убегает на бесконечность за N итераций — сохранить точку</p>
+            <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;">3. Если последовательность не убегает на бесконечность за n итераций — сохранить точку</p>
             <p style="font-size: {DESCRIPTION_TEXT_SIZE}px;"><b>Свойства:</b> Фрактальная граница, самоподобие, хаотическая динамика.</p>
         """
     }
