@@ -607,23 +607,25 @@ class GameWindow(QWidget):
 
         # Левая панель с элементами управления
         left_panel = QWidget()
-        left_panel.setMinimumWidth(250)
-        left_panel.setMaximumWidth(350)
+        left_panel.setMinimumWidth(600)
+        left_panel.setMaximumWidth(600)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setSpacing(3)  # Уменьшаем расстояние между элементами
         left_layout.setContentsMargins(int(5 * SCALE), int(5 * SCALE), int(5 * SCALE), int(5 * SCALE))  # Уменьшаем отступы
 
         # выбор уровня сложности
         self.diff_label = QLabel("Уровень сложности:")
+        self.diff_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.diff_combo = QComboBox()
         self.diff_combo.addItems(["Лёгкий", "Средний", "Сложный"])
-        self.diff_combo.setMinimumHeight(int(28 * SCALE))
-        self.diff_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(3 * SCALE)}px;")
+        self.diff_combo.setMinimumHeight(int(15 * SCALE))
+        self.diff_combo.setStyleSheet(f"font-size: {int(15 * SCALE)}px; padding: {int(8 * SCALE)}px;")
         left_layout.addWidget(self.diff_label)
         left_layout.addWidget(self.diff_combo)
 
         # выбор стратегии
         self.strategy_label = QLabel("Стратегия:")
+        self.strategy_label.setStyleSheet(f"font-size: {int(15 * SCALE)}px; font-weight: bold;")
         self.strategy_combo = QComboBox()
         self.strategy_combo.addItems([
             "Случайная стратегия",
@@ -641,35 +643,42 @@ class GameWindow(QWidget):
             "Папоротник Барнсли",
             "Множество Жюлиа"
         ])
-        self.strategy_combo.setMinimumHeight(int(28 * SCALE))
-        self.strategy_combo.setStyleSheet(f"font-size: {int(12 * SCALE)}px; padding: {int(3 * SCALE)}px;")
+        self.strategy_combo.setMinimumHeight(int(45 * SCALE))
+        self.strategy_combo.setStyleSheet(f"font-size: {int(16 * SCALE)}px; padding: {int(8 * SCALE)}px;")
 
         left_layout.addWidget(self.strategy_label)
         left_layout.addWidget(self.strategy_combo)
 
         # Radio кнопки для режима случайной стратегии
         self.random_mode_label = QLabel("Режим случайной стратегии:")
-        self.random_mode_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.random_mode_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         left_layout.addWidget(self.random_mode_label)
 
-        # Группа radio кнопок
+        # Группа radio кнопок в одной строке
+        self.radio_buttons_widget = QWidget()
+        radio_buttons_layout = QHBoxLayout(self.radio_buttons_widget)
+        radio_buttons_layout.setContentsMargins(0, 0, 0, 0)
+        radio_buttons_layout.setSpacing(int(15 * SCALE))
+
         self.random_mode_group = QButtonGroup()
 
         self.identify_radio = QRadioButton("Отгадай")
         self.identify_radio.setChecked(True)
-        self.identify_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(2 * SCALE)}px;")
+        self.identify_radio.setStyleSheet(f"font-size: {int(16 * SCALE)}px; padding: {int(5 * SCALE)}px;")
         self.random_mode_group.addButton(self.identify_radio, 2)
-        left_layout.addWidget(self.identify_radio)
+        radio_buttons_layout.addWidget(self.identify_radio)
 
         self.guess_radio = QRadioButton("Угадай")
-        self.guess_radio.setStyleSheet(f"font-size: {int(11 * SCALE)}px; padding: {int(2 * SCALE)}px;")
+        self.guess_radio.setStyleSheet(f"font-size: {int(16 * SCALE)}px; padding: {int(5 * SCALE)}px;")
         self.random_mode_group.addButton(self.guess_radio, 1)
-        left_layout.addWidget(self.guess_radio)
+        radio_buttons_layout.addWidget(self.guess_radio)
+
+        radio_buttons_layout.addStretch()
+        left_layout.addWidget(self.radio_buttons_widget)
 
         # Изначально скрываем radio кнопки
         self.random_mode_label.hide()
-        self.guess_radio.hide()
-        self.identify_radio.hide()
+        self.radio_buttons_widget.hide()
 
         # Подключаем обработчик изменения стратегии
         self.strategy_combo.currentTextChanged.connect(self._on_strategy_changed)
@@ -679,7 +688,7 @@ class GameWindow(QWidget):
 
         # слайдер для скорости анимации (интервал между обновлениями в мс)
         self.speed_label = QLabel("Скорость: 100 мс")
-        self.speed_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.speed_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setMinimum(10)
         self.speed_slider.setMaximum(1000)
@@ -693,7 +702,7 @@ class GameWindow(QWidget):
 
         # слайдер для количества точек за шаг
         self.points_per_step_label = QLabel("Точек за шаг: 10")
-        self.points_per_step_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.points_per_step_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.points_per_step_slider = QSlider(Qt.Orientation.Horizontal)
         self.points_per_step_slider.setMinimum(1)
         self.points_per_step_slider.setMaximum(100)
@@ -707,7 +716,7 @@ class GameWindow(QWidget):
 
         # слайдер для размера точек
         self.point_size_label = QLabel("Размер точек: 3")
-        self.point_size_label.setStyleSheet(f"font-size: {int(12 * SCALE)}px; font-weight: bold;")
+        self.point_size_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.point_size_slider = QSlider(Qt.Orientation.Horizontal)
         self.point_size_slider.setMinimum(1)
         self.point_size_slider.setMaximum(30)
@@ -719,27 +728,33 @@ class GameWindow(QWidget):
         left_layout.addWidget(self.point_size_label)
         left_layout.addWidget(self.point_size_slider)
 
+        # Кнопки "Генерировать" и "Пауза" на одном уровне
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(int(10 * SCALE))
+
         # кнопка генерации
         self.gen_button = QPushButton("Генерировать")
         self.gen_button.clicked.connect(self.generate_points)
-        self.gen_button.setMinimumHeight(int(35 * SCALE))
-        self.gen_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
-        left_layout.addWidget(self.gen_button)
+        self.gen_button.setMinimumHeight(int(45 * SCALE))
+        self.gen_button.setStyleSheet(f"font-size: {int(18 * SCALE)}px; padding: {int(8 * SCALE)}px; font-weight: bold;")
+        buttons_layout.addWidget(self.gen_button)
 
         # кнопка паузы
         self.pause_button = QPushButton("Пауза")
         self.pause_button.clicked.connect(self.toggle_pause)
         self.pause_button.setEnabled(False)  # изначально недоступна
-        self.pause_button.setMinimumHeight(int(35 * SCALE))
-        self.pause_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
-        left_layout.addWidget(self.pause_button)
+        self.pause_button.setMinimumHeight(int(45 * SCALE))
+        self.pause_button.setStyleSheet(f"font-size: {int(18 * SCALE)}px; padding: {int(8 * SCALE)}px; font-weight: bold;")
+        buttons_layout.addWidget(self.pause_button)
+
+        left_layout.addLayout(buttons_layout)
 
         # кнопка показа правильного ответа
         self.answer_button = QPushButton("Ответ")
         self.answer_button.clicked.connect(self.show_correct_answer)
         self.answer_button.setEnabled(False)  # изначально недоступна
-        self.answer_button.setMinimumHeight(int(35 * SCALE))
-        self.answer_button.setStyleSheet(f"font-size: {int(14 * SCALE)}px; padding: {int(5 * SCALE)}px;")
+        self.answer_button.setMinimumHeight(int(45 * SCALE))
+        self.answer_button.setStyleSheet(f"font-size: {int(18 * SCALE)}px; padding: {int(8 * SCALE)}px; font-weight: bold;")
         left_layout.addWidget(self.answer_button)
 
         # метка для названия стратегии
@@ -781,12 +796,10 @@ class GameWindow(QWidget):
         """Показывает/скрывает radio кнопки при выборе случайной стратегии"""
         if strategy_name == "Случайная стратегия":
             self.random_mode_label.show()
-            self.guess_radio.show()
-            self.identify_radio.show()
+            self.radio_buttons_widget.show()
         else:
             self.random_mode_label.hide()
-            self.guess_radio.hide()
-            self.identify_radio.hide()
+            self.radio_buttons_widget.hide()
 
     def toggle_pause(self):
         """Переключает паузу анимации"""
