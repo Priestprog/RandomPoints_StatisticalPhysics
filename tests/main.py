@@ -643,8 +643,8 @@ class GameWindow(QWidget):
             "Папоротник Барнсли",
             "Множество Жюлиа"
         ])
-        self.strategy_combo.setMinimumHeight(int(45 * SCALE))
-        self.strategy_combo.setStyleSheet(f"font-size: {int(16 * SCALE)}px; padding: {int(8 * SCALE)}px;")
+        self.strategy_combo.setMinimumHeight(int(15 * SCALE))
+        self.strategy_combo.setStyleSheet(f"font-size: {int(15 * SCALE)}px; padding: {int(8 * SCALE)}px;")
 
         left_layout.addWidget(self.strategy_label)
         left_layout.addWidget(self.strategy_combo)
