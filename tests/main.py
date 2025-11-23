@@ -687,7 +687,7 @@ class GameWindow(QWidget):
         self._on_strategy_changed(self.strategy_combo.currentText())
 
         # слайдер для скорости анимации (интервал между обновлениями в мс)
-        self.speed_label = QLabel("Скорость: 100 мс")
+        self.speed_label = QLabel("Скорость анимации:")
         self.speed_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setMinimum(10)
@@ -818,7 +818,7 @@ class GameWindow(QWidget):
         """Обработчик изменения скорости анимации"""
         # Инвертируем значение: 10->1000, 1000->10
         inverted_value = 1010 - value
-        self.speed_label.setText(f"Скорость: {inverted_value} мс")
+        self.speed_label.setText(f"Скорость анимации:")
         # Если анимация идёт, изменяем интервал таймера
         if self.is_animating:
             self.animation_timer.setInterval(inverted_value)
