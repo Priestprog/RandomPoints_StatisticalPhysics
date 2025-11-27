@@ -567,7 +567,7 @@ def calculate_point_colors(point_portions, current_portion):
     """
     Вычисляет цвета точек на основе их возраста (номера порции).
 
-    Градиент: Ярко-голубой (cyan) → Синий (blue) → Фиолетовый (purple) → Серый (gray)
+    Градиент: #007dff → #1b67d0 → #2152a2 → #213e77 → #1c2b4f → #141929 → серый
 
     Args:
         point_portions: массив номеров порций для каждой точки
@@ -578,11 +578,24 @@ def calculate_point_colors(point_portions, current_portion):
     """
     colors = []
 
-    # Определяем ключевые цвета градиента
-    # Ярко-голубой (cyan): (0, 1, 1)
-    # Синий (blue): (0, 0, 1)
-    # Фиолетовый (purple): (0.5, 0, 0.5)
-    # Серый (gray): (0.5, 0.5, 0.5)
+    # Определяем ключевые цвета градиента (в RGB от 0 до 1)
+    # #007dff: (0.0, 0.49, 1.0)
+    # #1b67d0: (0.106, 0.404, 0.816)
+    # #2152a2: (0.129, 0.322, 0.635)
+    # #213e77: (0.129, 0.243, 0.467)
+    # #1c2b4f: (0.110, 0.169, 0.310)
+    # #141929: (0.078, 0.098, 0.161)
+    # Серый: (0.5, 0.5, 0.5)
+
+    gradient_colors = [
+        (0.0, 0.49, 1.0),        # #007dff
+        (0.106, 0.404, 0.816),   # #1b67d0
+        (0.129, 0.322, 0.635),   # #2152a2
+        (0.129, 0.243, 0.467),   # #213e77
+        (0.110, 0.169, 0.310),   # #1c2b4f
+        (0.078, 0.098, 0.161),   # #141929
+        (0.5, 0.5, 0.5)          # серый
+    ]
 
     for portion in point_portions:
         # Вычисляем возраст порции (сколько порций прошло с момента появления)
@@ -595,29 +608,25 @@ def calculate_point_colors(point_portions, current_portion):
             # progress изменяется от 0 (новая точка) до 1 (почти серая)
             progress = age / N_PORTIONS_TO_GRAY
 
-            if progress < 1/3:
-                # Первая треть градиента: Ярко-голубой (0, 1, 1) → Синий (0, 0, 1)
-                progress_third = progress * 3
+            # Определяем между какими цветами интерполировать
+            num_segments = len(gradient_colors) - 1
+            segment = progress * num_segments
+            segment_index = int(segment)
 
-                r = 0.0
-                g = 1.0 - progress_third * 1.0  # от 1.0 до 0.0
-                b = 1.0
+            # Защита от выхода за границы
+            if segment_index >= num_segments:
+                segment_index = num_segments - 1
 
-            elif progress < 2/3:
-                # Вторая треть градиента: Синий (0, 0, 1) → Фиолетовый (0.5, 0, 0.5)
-                progress_third = (progress - 1/3) * 3
+            # Локальный прогресс внутри текущего сегмента (от 0 до 1)
+            local_progress = segment - segment_index
 
-                r = 0.0 + progress_third * 0.5  # от 0.0 до 0.5
-                g = 0.0
-                b = 1.0 - progress_third * 0.5  # от 1.0 до 0.5
+            # Интерполяция между двумя соседними цветами
+            color_start = gradient_colors[segment_index]
+            color_end = gradient_colors[segment_index + 1]
 
-            else:
-                # Последняя треть градиента: Фиолетовый (0.5, 0, 0.5) → Серый (0.5, 0.5, 0.5)
-                progress_third = (progress - 2/3) * 3
-
-                r = 0.5
-                g = 0.0 + progress_third * 0.5  # от 0.0 до 0.5
-                b = 0.5
+            r = color_start[0] + (color_end[0] - color_start[0]) * local_progress
+            g = color_start[1] + (color_end[1] - color_start[1]) * local_progress
+            b = color_start[2] + (color_end[2] - color_start[2]) * local_progress
 
             colors.append([r, g, b])
 
