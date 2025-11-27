@@ -21,6 +21,10 @@ from strategies import (
 # Константы масштабирования и размеров текста
 SCALE = 1.7
 
+# Константа для цветового градиента точек
+# Определяет, через сколько порций точки становятся полностью серыми
+N_PORTIONS_TO_GRAY = 3
+
 # Размеры текста для диалогового окна с ответом
 DESCRIPTION_TEXT_SIZE = 22  # Размер обычного текста
 FORMULA_TEXT_SIZE = 26      # Размер формул
@@ -559,6 +563,67 @@ class AuthorsScreen(QWidget):
         layout.addWidget(self.back_button)
 
 
+def calculate_point_colors(point_portions, current_portion):
+    """
+    Вычисляет цвета точек на основе их возраста (номера порции).
+
+    Градиент: Ярко-голубой (cyan) → Синий (blue) → Фиолетовый (purple) → Серый (gray)
+
+    Args:
+        point_portions: массив номеров порций для каждой точки
+        current_portion: текущий номер порции
+
+    Returns:
+        массив RGB цветов для каждой точки
+    """
+    colors = []
+
+    # Определяем ключевые цвета градиента
+    # Ярко-голубой (cyan): (0, 1, 1)
+    # Синий (blue): (0, 0, 1)
+    # Фиолетовый (purple): (0.5, 0, 0.5)
+    # Серый (gray): (0.5, 0.5, 0.5)
+
+    for portion in point_portions:
+        # Вычисляем возраст порции (сколько порций прошло с момента появления)
+        age = current_portion - portion
+
+        if age >= N_PORTIONS_TO_GRAY:
+            # Полностью серая точка
+            colors.append([0.5, 0.5, 0.5])
+        else:
+            # progress изменяется от 0 (новая точка) до 1 (почти серая)
+            progress = age / N_PORTIONS_TO_GRAY
+
+            if progress < 1/3:
+                # Первая треть градиента: Ярко-голубой (0, 1, 1) → Синий (0, 0, 1)
+                progress_third = progress * 3
+
+                r = 0.0
+                g = 1.0 - progress_third * 1.0  # от 1.0 до 0.0
+                b = 1.0
+
+            elif progress < 2/3:
+                # Вторая треть градиента: Синий (0, 0, 1) → Фиолетовый (0.5, 0, 0.5)
+                progress_third = (progress - 1/3) * 3
+
+                r = 0.0 + progress_third * 0.5  # от 0.0 до 0.5
+                g = 0.0
+                b = 1.0 - progress_third * 0.5  # от 1.0 до 0.5
+
+            else:
+                # Последняя треть градиента: Фиолетовый (0.5, 0, 0.5) → Серый (0.5, 0.5, 0.5)
+                progress_third = (progress - 2/3) * 3
+
+                r = 0.5
+                g = 0.0 + progress_third * 0.5  # от 0.0 до 0.5
+                b = 0.5
+
+            colors.append([r, g, b])
+
+    return np.array(colors)
+
+
 class GameWindow(QWidget):
     """Игровое окно с генерацией точек"""
     def __init__(self, parent=None):
@@ -573,6 +638,10 @@ class GameWindow(QWidget):
         self.animation_step = 1
         self.is_animating = False
         self.is_paused = False
+
+        # Переменные для отслеживания порций точек
+        self.point_portions = []  # Список номеров порций для каждой точки
+        self.current_portion = 0  # Текущий номер порции
 
     def init_ui(self):
         # --- GUI: горизонтальная компоновка ---
@@ -691,8 +760,8 @@ class GameWindow(QWidget):
         self.speed_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setMinimum(10)
-        self.speed_slider.setMaximum(1000)
-        self.speed_slider.setValue(900)
+        self.speed_slider.setMaximum(3000)
+        self.speed_slider.setValue(2700)
         self.speed_slider.setMinimumHeight(int(25 * SCALE))
         self.speed_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
         self.speed_slider.valueChanged.connect(self._on_speed_changed)
@@ -719,7 +788,7 @@ class GameWindow(QWidget):
         self.point_size_label.setStyleSheet(f"font-size: {int(16 * SCALE)}px; font-weight: bold;")
         self.point_size_slider = QSlider(Qt.Orientation.Horizontal)
         self.point_size_slider.setMinimum(1)
-        self.point_size_slider.setMaximum(30)
+        self.point_size_slider.setMaximum(50)
         self.point_size_slider.setValue(3)
         self.point_size_slider.setMinimumHeight(int(25 * SCALE))
         self.point_size_slider.setStyleSheet(f"QSlider::groove:horizontal {{ height: {int(8 * SCALE)}px; }} QSlider::handle:horizontal {{ width: {int(18 * SCALE)}px; height: {int(18 * SCALE)}px; }}")
@@ -816,8 +885,8 @@ class GameWindow(QWidget):
 
     def _on_speed_changed(self, value):
         """Обработчик изменения скорости анимации"""
-        # Инвертируем значение: 10->1000, 1000->10
-        inverted_value = 1010 - value
+        # Инвертируем значение: 10->3000, 3000->10
+        inverted_value = 3010 - value
         self.speed_label.setText(f"Скорость анимации:")
         # Если анимация идёт, изменяем интервал таймера
         if self.is_animating:
@@ -1019,7 +1088,7 @@ class GameWindow(QWidget):
 
         # Получаем параметры анимации из слайдеров
         slider_value = self.speed_slider.value()
-        animation_interval = 1010 - slider_value  # инвертируем значение
+        animation_interval = 3010 - slider_value  # инвертируем значение
         step = self.points_per_step_slider.value()  # количество точек за шаг
         point_size = self.point_size_slider.value()  # размер точек
 
@@ -1050,6 +1119,10 @@ class GameWindow(QWidget):
         self.is_animating = True
         self.is_paused = False
 
+        # Инициализируем массив порций для каждой точки
+        self.point_portions = []
+        self.current_portion = 0
+
         # Активируем кнопки ответа и паузы
         self.answer_button.setEnabled(True)
         self.pause_button.setEnabled(True)
@@ -1073,11 +1146,13 @@ class GameWindow(QWidget):
         for spine in self.ax.spines.values():
             spine.set_visible(False)
 
-        # Рисуем точки от 0 до animation_index
+        # Рисуем точки от 0 до animation_index с градиентом
         points_to_show = self.current_points[:self.animation_index]
         if len(points_to_show) > 0:
+            # Вычисляем цвета для всех отображаемых точек
+            colors = calculate_point_colors(self.point_portions, self.current_portion)
             self.ax.scatter(points_to_show[:, 0], points_to_show[:, 1],
-                           s=self.current_point_size, color='blue')
+                           s=self.current_point_size, c=colors)
 
         self.canvas.draw()
 
@@ -1089,6 +1164,11 @@ class GameWindow(QWidget):
         # Вычисляем индекс конца текущей порции точек
         end_index = min(self.animation_index + self.animation_step, len(self.current_points))
 
+        # Добавляем новые точки в список порций
+        # Все новые точки (от animation_index до end_index) получают текущий номер порции
+        num_new_points = end_index - self.animation_index
+        self.point_portions.extend([self.current_portion] * num_new_points)
+
         # Очищаем и рисуем накопленные точки
         self.ax.clear()
         self.ax.set_aspect('equal')
@@ -1099,15 +1179,19 @@ class GameWindow(QWidget):
         for spine in self.ax.spines.values():
             spine.set_visible(False)
 
-        # Рисуем точки от 0 до end_index
+        # Рисуем точки от 0 до end_index с градиентом цвета
         points_to_show = self.current_points[:end_index]
-        self.ax.scatter(points_to_show[:, 0], points_to_show[:, 1],
-                       s=self.current_point_size, color='blue')
+        if len(points_to_show) > 0:
+            # Вычисляем цвета для всех точек
+            colors = calculate_point_colors(self.point_portions, self.current_portion)
+            self.ax.scatter(points_to_show[:, 0], points_to_show[:, 1],
+                           s=self.current_point_size, c=colors)
 
         self.canvas.draw()
 
-        # Обновляем индекс
+        # Обновляем индекс и номер порции
         self.animation_index = end_index
+        self.current_portion += 1
 
         # Проверяем, закончилась ли анимация
         if self.animation_index >= len(self.current_points):
