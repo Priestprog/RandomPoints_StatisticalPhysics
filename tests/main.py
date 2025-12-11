@@ -318,6 +318,7 @@ def get_strategy_description(strategy_name):
 
 class TitleScreen(QWidget):
     """Титульный экран с логотипами и кнопками"""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_ui()
@@ -357,7 +358,8 @@ class TitleScreen(QWidget):
         logo_mmp = QLabel()
         pixmap_mmp = QPixmap(str(Path(__file__).parent / "logo-mgu.png"))
         if not pixmap_mmp.isNull():
-            logo_mmp.setPixmap(pixmap_mmp.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            logo_mmp.setPixmap(pixmap_mmp.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio,
+                                                 Qt.TransformationMode.SmoothTransformation))
         logo_mmp.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         top_layout.addWidget(logo_mmp, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
@@ -367,7 +369,8 @@ class TitleScreen(QWidget):
         logo_right = QLabel()
         pixmap_right = QPixmap(str(Path(__file__).parent / "logo_mmp.png"))
         if not pixmap_right.isNull():
-            logo_right.setPixmap(pixmap_right.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            logo_right.setPixmap(pixmap_right.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio,
+                                                     Qt.TransformationMode.SmoothTransformation))
         logo_right.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         top_layout.addWidget(logo_right, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
 
@@ -395,91 +398,73 @@ class TitleScreen(QWidget):
         button_container.addStretch()
 
         button_layout = QVBoxLayout()
-        button_layout.setSpacing(30)  # Увеличили отступ между кнопками
+        button_layout.setSpacing(30)
 
-        # Кнопка "Модель"
+        # Стиль кнопок (одинаковый для всех)
+        button_style = """
+            QPushButton {
+                font-size: 24px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 10px;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """
+
+        # Первый ряд: Модель и Теория
+        first_row = QHBoxLayout()
+        first_row.setSpacing(20)
+
         self.play_button = QPushButton("Модель")
         self.play_button.setMinimumHeight(70)
         self.play_button.setMinimumWidth(400)
-        self.play_button.setStyleSheet("""
-            QPushButton {
-                font-size: 24px;
-                font-weight: bold;
-                background-color: white;
-                border: 2px solid #333;
-                border-radius: 10px;
-                padding: 15px;
-            }
-            QPushButton:hover {
-                background-color: #f0f0f0;
-            }
-        """)
-        button_layout.addWidget(self.play_button)
+        self.play_button.setStyleSheet(button_style)
+        first_row.addWidget(self.play_button)
 
-        # Кнопка "Авторы"
-        self.authors_button = QPushButton("Авторы")
-        self.authors_button.setMinimumHeight(70)
-        self.authors_button.setMinimumWidth(400)
-        self.authors_button.setStyleSheet("""
-            QPushButton {
-                font-size: 24px;
-                font-weight: bold;
-                background-color: white;
-                border: 2px solid #333;
-                border-radius: 10px;
-                padding: 15px;
-            }
-            QPushButton:hover {
-                background-color: #f0f0f0;
-            }
-        """)
-        button_layout.addWidget(self.authors_button)
-
-        # Кнопка "Теория"
         self.theory_button = QPushButton("Теория")
         self.theory_button.setMinimumHeight(70)
         self.theory_button.setMinimumWidth(400)
-        self.theory_button.setStyleSheet("""
-            QPushButton {
-                font-size: 24px;
-                font-weight: bold;
-                background-color: white;
-                border: 2px solid #333;
-                border-radius: 10px;
-                padding: 15px;
-            }
-            QPushButton:hover {
-                background-color: #f0f0f0;
-            }
-        """)
+        self.theory_button.setStyleSheet(button_style)
         self.theory_button.clicked.connect(self.open_theory_pdf)
-        button_layout.addWidget(self.theory_button)
+        first_row.addWidget(self.theory_button)
 
-        # Кнопка "Выход"
+        button_layout.addLayout(first_row)
+
+        # Второй ряд: Авторы (по центру)
+        second_row = QHBoxLayout()
+        second_row.addStretch()
+
+        self.authors_button = QPushButton("Авторы")
+        self.authors_button.setMinimumHeight(70)
+        self.authors_button.setMinimumWidth(400)
+        self.authors_button.setStyleSheet(button_style)
+        second_row.addWidget(self.authors_button)
+
+        second_row.addStretch()
+        button_layout.addLayout(second_row)
+
+        # Третий ряд: Выход (по центру)
+        third_row = QHBoxLayout()
+        third_row.addStretch()
+
         self.exit_button = QPushButton("Выход")
         self.exit_button.setMinimumHeight(70)
         self.exit_button.setMinimumWidth(400)
-        self.exit_button.setStyleSheet("""
-            QPushButton {
-                font-size: 24px;
-                font-weight: bold;
-                background-color: white;
-                border: 2px solid #333;
-                border-radius: 10px;
-                padding: 15px;
-            }
-            QPushButton:hover {
-                background-color: #f0f0f0;
-            }
-        """)
-        button_layout.addWidget(self.exit_button)
+        self.exit_button.setStyleSheet(button_style)
+        third_row.addWidget(self.exit_button)
+
+        third_row.addStretch()
+        button_layout.addLayout(third_row)
 
         button_container.addLayout(button_layout)
         button_container.addStretch()
 
         layout.addLayout(button_container)
         layout.addStretch()
-
 
 class AuthorsScreen(QWidget):
     """Экран с информацией об авторах"""
