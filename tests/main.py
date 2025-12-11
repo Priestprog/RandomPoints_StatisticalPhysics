@@ -359,7 +359,7 @@ class TitleScreen(QWidget):
 
         layout.addSpacing(10)
 
-        title2 = QLabel("Псевдослучайные структуры точек на поверхности")
+        title2 = QLabel("Физические модели генерации точечных структур на плоскости")
         title2.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title2.setFont(QFont("Arial", 36))
         layout.addWidget(title2)
