@@ -18,6 +18,7 @@ a = Analysis(
         ('tests/Папоротник_Барнсли.png', '.'),
         ('tests/Множество_Жюлиа.png', '.'),
         ('tests/Дерево_Пифагора.png', '.'),
+        ('tests/Theory.pdf', '.'),
     ],
     hiddenimports=[
         'PyQt6.QtCore',

@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
     QPushButton, QComboBox, QLabel, QDialog, QTextEdit, QSlider, QStackedWidget,
     QRadioButton, QButtonGroup, QScrollArea)
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPixmap, QFont
+from PyQt6.QtCore import Qt, QTimer, QUrl
+from PyQt6.QtGui import QPixmap, QFont, QDesktopServices
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -322,6 +322,30 @@ class TitleScreen(QWidget):
         super().__init__(parent)
         self.init_ui()
 
+    def open_theory_pdf(self):
+        """Открывает файл Theory.pdf в системном приложении по умолчанию"""
+        import sys
+
+        # Определяем путь к PDF файлу
+        # Сначала пробуем найти рядом с исполняемым файлом (для собранного приложения)
+        if getattr(sys, 'frozen', False):
+            # Если запущено как собранное приложение
+            exe_dir = Path(sys.executable).parent
+            pdf_path = exe_dir / "Theory.pdf"
+
+            # Если не найдено рядом с exe, ищем внутри ресурсов PyInstaller
+            if not pdf_path.exists():
+                pdf_path = Path(sys._MEIPASS) / "Theory.pdf"
+        else:
+            # Режим разработки
+            pdf_path = Path(__file__).parent / "Theory.pdf"
+
+        if pdf_path.exists():
+            # Открываем PDF в системном приложении
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(pdf_path)))
+        else:
+            print(f"ПРЕДУПРЕЖДЕНИЕ: Файл теории не найден: {pdf_path}")
+
     def init_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(50, 30, 50, 50)
@@ -410,6 +434,26 @@ class TitleScreen(QWidget):
             }
         """)
         button_layout.addWidget(self.authors_button)
+
+        # Кнопка "Теория"
+        self.theory_button = QPushButton("Теория")
+        self.theory_button.setMinimumHeight(70)
+        self.theory_button.setMinimumWidth(400)
+        self.theory_button.setStyleSheet("""
+            QPushButton {
+                font-size: 24px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #333;
+                border-radius: 10px;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """)
+        self.theory_button.clicked.connect(self.open_theory_pdf)
+        button_layout.addWidget(self.theory_button)
 
         # Кнопка "Выход"
         self.exit_button = QPushButton("Выход")
